@@ -1,56 +1,62 @@
 ﻿using System;
-using Klondike.Core;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+namespace Klondike.Core
 {
-    Deck deck = new Deck();
 
-    [SerializeField] private Pile[] piles = default;
-    [SerializeField] private Pool pool = default;
-
-    public static Action OnValidMove;
-
-    // Start is called before the first frame update
-    void Start()
+    public class GameManager : MonoBehaviour
     {
-        //Debug.Log(deck);
-    }
+        Deck deck = new Deck();
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
+        [SerializeField] private Pile[] piles = default;
+        [SerializeField] private Stock stock = default;
+
+        public static Action OnValidMove;
+
+        // Start is called before the first frame update
+        void Start()
         {
-            deck.Shuffle();
-            Debug.Log("Deck shuffled");
-            StartGame();
             //Debug.Log(deck);
         }
 
-
-        // FOR TESTING PURPOSES ONLY
-        if (Input.GetMouseButtonDown(1))
+        // Update is called once per frame
+        void Update()
         {
-            OnValidMove?.Invoke();
-        }
-    }
-
-    private void StartGame()
-    {
-        int givenCards = 0;
-        for (int i = 0; i < piles.Length; i++)
-        {
-            for (int j = 0; j < i+1; j++)
+            // Diventerà il "NEW GAME"
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                piles[i].AddCoveredCardToPile(deck.GetNextCard());
-                givenCards++;
+                deck.Shuffle();
+                Debug.Log("Deck shuffled");
+                StartGame();
+                //Debug.Log(deck);
+            }
+
+
+            // FOR TESTING PURPOSES ONLY
+            if (Input.GetMouseButtonDown(1))
+            {
+                OnValidMove?.Invoke();
             }
         }
-        while (givenCards < Deck.DECK_SIZE)
+
+        private void StartGame()
         {
-            pool.AddCoveredCardToPile(deck.GetNextCard());
-            givenCards++;
+            int givenCards = 0;
+            for (int i = 0; i < piles.Length; i++)
+            {
+                for (int j = 0; j < i + 1; j++)
+                {
+                    piles[i].AddCoveredCardToPile(deck.GetNextCard());
+                    givenCards++;
+                }
+            }
+            while (givenCards < Deck.DECK_SIZE)
+            {
+                stock.AddCardToStock(deck.GetNextCard());
+                givenCards++;
+            }
+            OnValidMove?.Invoke();
         }
+
     }
 }

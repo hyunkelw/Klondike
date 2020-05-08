@@ -7,7 +7,7 @@ namespace Klondike.Core
     {
         public const int DECK_SIZE = 52;
 
-        private Card[] deckArray = new Card[DECK_SIZE];
+        private PlayableCard[] deckArray = new PlayableCard[DECK_SIZE];
         private int currentIndex = 0;
 
         public Deck()
@@ -16,7 +16,7 @@ namespace Klondike.Core
             {
                 for (int rankIndex = 1; rankIndex < (int)CardRank.COUNT; deckIndex++, rankIndex++)
                 {
-                    deckArray[deckIndex] = new Card(suitIndex, rankIndex);
+                    deckArray[deckIndex] = new PlayableCard(suitIndex, rankIndex);
                 }
             }
         }
@@ -33,7 +33,7 @@ namespace Klondike.Core
             }
         }
 
-        public Card GetNextCard()
+        public PlayableCard GetNextCard()
         {
             return deckArray[currentIndex++];
         }

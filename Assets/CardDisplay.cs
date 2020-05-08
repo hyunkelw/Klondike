@@ -1,63 +1,80 @@
-﻿using Klondike.Core;
+﻿using System.Collections;
+using Klondike.Core;
 using Klondike.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CardDisplay : MonoBehaviour
+namespace Klondike.UI
 {
-    [SerializeField] private Card cardDetail = default;
-    
-    [SerializeField] private Image rankSR = default;
-    [SerializeField] private Image suitSR = default;
-    [SerializeField] private Image iconSR = default;
-
-    [SerializeField] private Sprite[] rankSprites = default;
-    [SerializeField] private Sprite[] suitSprites = default;
-    
-    // Start is called before the first frame update
-    void Start()
+    public class CardDisplay : MonoBehaviour
     {
-        ChangeCardDetails();
-    }
+        [SerializeField] private Image rankSR = default;
+        [SerializeField] private Image suitSR = default;
+        [SerializeField] private Image iconSR = default;
 
+        [SerializeField] private Sprite[] rankSprites = default;
+        [SerializeField] private Sprite[] suitSprites = default;
 
-    private void OnValidate()
-    {
-        ChangeCardDetails();
-    }
+        private PlayableCard cardDetail = default;
 
-    private void ChangeCardDetails()
-    {
-        if (cardDetail != null)
+        private void OnEnable()
         {
-            rankSR.sprite = ChooseRankSprite(cardDetail.rank);
-            rankSR.color = ChooseRankColor(cardDetail.color);
-            suitSR.sprite = ChooseSuitSprite(cardDetail.suit);
-            iconSR.sprite = ChooseSuitSprite(cardDetail.suit);
+            cardDetail = GetComponent<Card>().CardDetails;
+            ChangeCardDetails(cardDetail);
+            GetComponent<Card>().OnValuesChanged += ChangeCardDetails;
         }
-    }
 
-    private Color ChooseRankColor(CardColor color)
-    {
-        switch (color)
+        private void ChangeCardDetails(PlayableCard newDetails)
         {
-            case CardColor.BLACK:
-                return Color.black;
-            case CardColor.RED:
-                return Color.red;
-            default:
-                return Color.white;
+            if (newDetails != null)
+            {
+                cardDetail = newDetails;
+                rankSR.sprite = ChooseRankSprite(newDetails.rank);
+                rankSR.color = ChooseRankColor(newDetails.suit);
+                suitSR.sprite = iconSR.sprite = ChooseSuitSprite(newDetails.suit);
+            }
         }
-    }
 
-    private Sprite ChooseSuitSprite(CardSuit suit)
-    {
-        return suitSprites[(int)suit - 1];
-    }
+        private Color ChooseRankColor(CardSuit suit)
+        {
+            switch (suit)
+            {
+                case CardSuit.HEARTS:
+                case CardSuit.DIAMONDS:
+                {
+                    return Color.red;
+                }
+                case CardSuit.CLUBS:
+                case CardSuit.SPADES:
+                {
+                    return Color.black;
+                }
+                default:
+                {
+                    return Color.white;
+                }
+            }
+        }
 
-    private Sprite ChooseRankSprite(CardRank rank)
-    {
-        return rankSprites[(int)rank - 1];
+        private Sprite ChooseSuitSprite(CardSuit suit)
+        {
+            return suitSprites[(int)suit - 1];
+        }
+
+        private Sprite ChooseRankSprite(CardRank rank)
+        {
+            return rankSprites[(int)rank - 1];
+        }
+
+        private void OnDestroy()
+        {
+            GetComponent<Card>().OnValuesChanged -= ChangeCardDetails;
+        }
+
+        public IEnumerator Flip()
+        {
+            yield return null;
+        }
     }
 
 }

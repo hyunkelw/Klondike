@@ -1,44 +1,104 @@
-﻿using UnityEngine;
-using Klondike.Utils;
+﻿using System;
+using System.Collections;
+using Klondike.Core;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
-namespace Klondike.Core
+//public class CardBehaviour : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
 
-    [System.Serializable]
-    public class Card
-    {
-        public CardSuit suit = CardSuit.NONE;
-        public CardRank rank = CardRank.NONE;
-        public CardColor color = CardColor.NONE;
+    [SerializeField] public GameObject appendSlot = default;
 
-        public Card(int suitIndex, int rankIndex)
+    public Action<PlayableCard> OnValuesChanged;
+
+    private PlayableCard cardDetail = default;
+
+    public PlayableCard CardDetails { get { return cardDetail; } }
+
+    private Canvas canvas;
+    private RectTransform rectTransform;
+    private CanvasGroup canvasGroup;
+
+    private Vector2 dragStartPosition;
+
+    private void Awake()
+    {
+        rectTransform = GetComponent<RectTransform>();
+        canvasGroup = GetComponent<CanvasGroup>();
+    }
+
+    private void OnEnable()
+    {
+        canvas = GameObject.FindGameObjectWithTag("Game Canvas").GetComponent<Canvas>();
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        Debug.Log("OnBeginDrag");
+        canvasGroup.alpha = .2f;
+        dragStartPosition = rectTransform.anchoredPosition;
+        Debug.Log(string.Format("[Card] Drag begun at {0}", rectTransform.anchoredPosition));
+        canvasGroup.blocksRaycasts = false;
+        appendSlot.GetComponent<CanvasGroup>().enabled = false; // disattivo il suo slot per evitare comportamenti insoliti
+        // TO DO: fare in modo che la carta sia sempre sopra a tutte le altre
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        var landingPile = eventData.pointerCurrentRaycast.gameObject.GetComponentInParent<Pile>();
+        canvasGroup.blocksRaycasts = true;
+        appendSlot.GetComponent<CanvasGroup>().enabled = true;
+        canvasGroup.alpha = 1f;
+        if (landingPile == null)
         {
-            suit = (CardSuit)suitIndex;
-            rank = (CardRank)rankIndex;
-            switch (suit)
+            //StartCoroutine(ReturnToPosition());
+            ReturnToPosition();
+        }
+        else
+        {
+            Debug.Log(string.Format("ended on {0}", landingPile.gameObject.name));
+            if (PlayableCard.CanBeAppended(cardDetail, landingPile.AttachableCard)) 
             {
-                case CardSuit.DIAMONDS:
-                case CardSuit.HEARTS:
-                {
-                    color = CardColor.RED;
-                    break;
-                }
-                case CardSuit.CLUBS:
-                case CardSuit.SPADES:
-                {
-                    color = CardColor.BLACK;
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
+                landingPile.AppendCard(this.gameObject);
+                GameManager.OnValidMove?.Invoke();
+            }
+            else
+            {
+                ReturnToPosition();
             }
         }
+    }
 
-        public override string ToString()
-        {
-            return string.Format("{0} - {1} of {2} - {3}", (int)rank + ((int)suit - 1) * 13, rank, suit, color);
-        }
+    //private IEnumerator ReturnToPosition()
+    //{
+    //    while (rectTransform.anchoredPosition != dragStartPosition)
+    //    {
+    //        rectTransform.anchoredPosition = Vector2.Lerp(rectTransform.anchoredPosition, dragStartPosition, Time.deltaTime);
+    //        yield return null;
+    //    }
+
+    //}
+
+    private void ReturnToPosition()
+    {
+        rectTransform.anchoredPosition = dragStartPosition;
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        Debug.Log("OnPointerDown");
+    }
+
+    public void SetCardDetails(PlayableCard card)
+    {
+        cardDetail = card;
+        OnValuesChanged?.Invoke(cardDetail);
     }
 }
+
