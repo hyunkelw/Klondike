@@ -108,7 +108,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 27, y: -23.6}
+  m_AnchoredPosition: {x: 27, y: -23.599998}
   m_SizeDelta: {x: 36, y: 36}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1401289211743515034
@@ -243,6 +243,8 @@ MonoBehaviour:
   rankSR: {fileID: 1401289211743515035}
   suitSR: {fileID: 1401289212913961104}
   iconSR: {fileID: 1401289211258727693}
+  coverSR: {fileID: 7595272280843762788}
+  rotationTime: 0.08
   rankSprites:
   - {fileID: 21300000, guid: 00dcd3bf68129ab46b6ed8013cf603a4, type: 3}
   - {fileID: 21300000, guid: e68fd26cd2c289c4a875d6db0fd1926e, type: 3}
@@ -296,7 +298,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -27.6, y: -23.6}
+  m_AnchoredPosition: {x: -27.6, y: -23.599998}
   m_SizeDelta: {x: 36, y: 36}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1401289212913961119

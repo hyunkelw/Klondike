@@ -14,7 +14,8 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
     [SerializeField] public GameObject appendSlot = default;
     [SerializeField] private PlayableCard cardDetails = default;
     [SerializeField] private bool isFaceUp = false;
-    [SerializeField] private float speed = 2f;
+    [SerializeField] private float speed = 3500f;
+    
     #endregion
 
     #region Attributes
@@ -32,6 +33,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
 
     #region Properties
     public PlayableCard CardDetails { get { return cardDetails; } }
+    public bool IsFaceUp { get { return isFaceUp; } }
     #endregion
 
     private void Awake()
@@ -52,6 +54,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (!isFaceUp)        { return; }
         canvasGroup.alpha = .2f;
         // Save Drag Start Position for the translation animation
         dragStartPosition = rectTransform.anchoredPosition;
@@ -71,11 +74,14 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
 
     public void OnDrag(PointerEventData eventData)
     {
+        if (!isFaceUp) { return; }
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (!isFaceUp) { return; }
+
         if (eventData == null) { return; } // needed only for editor issues
 
         landingSpot = eventData.pointerCurrentRaycast.gameObject.GetComponentInParent<IValidArea>();
@@ -108,6 +114,12 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
 
     }
 
+    public void Flip()
+    {
+        isFaceUp = !isFaceUp;
+        StartCoroutine(GetComponentInChildren<CardDisplay>().Flip(isFaceUp));
+    }
+
     //private void ReturnToPosition()
     //{
     //    rectTransform.anchoredPosition = dragStartPosition;
@@ -118,6 +130,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
     public void OnPointerDown(PointerEventData eventData)
     {
         //Debug.Log("OnPointerDown");
+        //Flip();
     }
 
 

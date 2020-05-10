@@ -11,7 +11,7 @@ namespace Klondike.Core
         [SerializeField] private Pile[] piles = default;
         [SerializeField] private Deck stock = default;
 
-        public static Action OnValidMove;
+        public static Action OnValidMove, OnStartGame;
 
         // Start is called before the first frame update
         void Start()
@@ -38,7 +38,8 @@ namespace Klondike.Core
             {
                 for (int j = 0; j < i + 1; j++)
                 {
-                    piles[i].AddCoveredCardToPile(deck.GetNextCard());
+                    //piles[i].AddCoveredCardToPile(deck.GetNextCard());
+                    piles[i].AddCardToPile(deck.GetNextCard());
                     givenCards++;
                 }
             }
@@ -47,7 +48,7 @@ namespace Klondike.Core
                 stock.AddCardToStock(deck.GetNextCard());
                 givenCards++;
             }
-            OnValidMove?.Invoke();
+            OnStartGame?.Invoke();
         }
 
     }

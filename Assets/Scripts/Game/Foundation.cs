@@ -8,7 +8,7 @@ namespace Klondike.Core
     public class Foundation : MonoBehaviour, IValidArea
     {
         #region Serialized Fields
-        [SerializeField] private CardSuit suit;
+        [SerializeField] private CardSuit suit = CardSuit.NONE;
         [SerializeField] private List<PlayableCard> availableCards = new List<PlayableCard>(); // only for showing in the inspector 
         #endregion
 
