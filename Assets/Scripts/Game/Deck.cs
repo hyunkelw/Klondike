@@ -109,6 +109,7 @@ namespace Klondike.Core
             newCard.gameObject.name = turnedCard.ToString();
             newCard.transform.SetParent(wastePile, false);
             newCard.GetComponent<Card>().SetCardDetails(turnedCard);
+            newCard.GetComponent<Card>().Flip();
             discardedCards.Add(turnedCard); // only for showing in the inspector
         }
 

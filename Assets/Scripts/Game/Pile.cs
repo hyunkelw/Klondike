@@ -57,7 +57,9 @@ namespace Klondike.Core
 
         private void OnEnable()
         {
-            GameManager.OnValidMove += TurnNextAvailableCard;
+            //GameManager.OnValidMove += TurnNextAvailableCard;
+            GameManager.OnStartGame += TurnNextCard;
+            GameManager.OnValidMove += TurnNextCard;
         }
 
         /// <summary>
@@ -68,9 +70,9 @@ namespace Klondike.Core
         {
             coveredPile.Push(cardToAdd);
             Vector3 position = GetComponent<RectTransform>().anchoredPosition + new Vector2(0f, offset * coveredPile.Count);
-            var newCoveredCard = Instantiate(coveredCardPrefab, position, Quaternion.identity);
-            newCoveredCard.gameObject.name = "Covered Card" + coveredPile.Count;
-            newCoveredCard.transform.SetParent(transform, false);
+            var newCard = Instantiate(coveredCardPrefab, position, Quaternion.identity);
+            newCard.gameObject.name = "Covered Card" + coveredPile.Count;
+            newCard.transform.SetParent(transform, false);
 
             availableCards.Add(cardToAdd); // only for showing in the inspector
         }
@@ -91,6 +93,7 @@ namespace Klondike.Core
                 newCard.gameObject.name = turnedCard.ToString();
                 newCard.transform.SetParent(transform, false);
                 newCard.GetComponent<Card>().SetCardDetails(turnedCard);
+                newCard.GetComponent<Card>().Flip();
 
 
                 Debug.Log(string.Format("Card {0} turned on {1}", turnedCard, SpotName));
@@ -102,13 +105,48 @@ namespace Klondike.Core
         }
 
         /// <summary>
+        /// Adds the given Card to the Pile
+        /// </summary>
+        /// <param name="cardToAdd"> the Card being Added to the Stock Pile</param>
+        public void AddCardToPile(PlayableCard cardToAdd)
+        {
+            //Vector3 position = GetComponent<RectTransform>().anchoredPosition + new Vector2(0f, offset * currentPile.Count);
+            var newCard = Instantiate(cardPrefab, Vector3.zero, Quaternion.identity);
+            newCard.GetComponent<Card>().SetCardDetails(cardToAdd);
+            newCard.gameObject.name = cardToAdd.ToString();
+            newCard.transform.SetParent(AppendSlot.GetComponent<RectTransform>(), false);
+            RectTransform cardRT = newCard.GetComponent<RectTransform>();
+            cardRT.anchorMin = cardRT.anchorMax = ANCHOR_CENTER;
+
+            currentPile.AddLast(newCard);
+            availableCards.Add(cardToAdd); // only for showing in the inspector
+        }
+
+        /// <summary>
+        /// Turn the card on top of the covered part of the pile, if there's one available and it's not flipped already.
+        /// </summary>
+        private void TurnNextCard()
+        {
+            if (currentPile.Count > 0)
+            {
+                var lastCard = currentPile.Last.Value.GetComponent<Card>();
+                if(!lastCard.IsFaceUp)
+                {
+                    lastCard.Flip();
+                }
+            }
+        }
+
+
+
+        /// <summary>
         /// Detach the card (and every card attached below) from this pile
         /// </summary>
         /// <param name="cardGO"></param>
         public void DetachCard(GameObject cardGO)
         {
             Debug.Log(string.Format("[Pile] Attempting to remove card {0} from {1}", cardGO.gameObject.name, SpotName));
-
+            
             // Before Detaching the card, check if it's not the bottom card. If it is, need to detach everything from that point onwards
             try
             {
@@ -116,6 +154,7 @@ namespace Klondike.Core
                 while (node != null)
                 {
                     var nextNode = node.Next;
+                    
                     currentPile.Remove(node);
                     onPileCards.Remove(node.Value.GetComponent<Card>().CardDetails); // only for showing in the inspector
                     node = nextNode;
@@ -153,6 +192,8 @@ namespace Klondike.Core
         private void OnDestroy()
         {
             //GameManager.OnValidMove -= TurnNextAvailableCard;
+            GameManager.OnValidMove -= TurnNextCard;
+            GameManager.OnStartGame -= TurnNextCard;
             coveredPile.Clear();
             currentPile.Clear();
             //bottomCard = null;
