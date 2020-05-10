@@ -6,37 +6,29 @@ namespace Klondike.Core
 
     public class GameManager : MonoBehaviour
     {
-        Deck deck = new Deck();
+        PlayableDeck deck = new PlayableDeck();
 
         [SerializeField] private Pile[] piles = default;
-        [SerializeField] private Stock stock = default;
+        [SerializeField] private Deck stock = default;
 
         public static Action OnValidMove;
 
         // Start is called before the first frame update
         void Start()
         {
-            //Debug.Log(deck);
+            deck.Shuffle();
+            StartGame();
         }
 
         // Update is called once per frame
         void Update()
         {
-            // Diventerà il "NEW GAME"
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                deck.Shuffle();
-                Debug.Log("Deck shuffled");
-                StartGame();
-                //Debug.Log(deck);
-            }
-
 
             // FOR TESTING PURPOSES ONLY
-            if (Input.GetMouseButtonDown(1))
-            {
-                OnValidMove?.Invoke();
-            }
+            //if (Input.GetMouseButtonDown(1))
+            //{
+            //    OnValidMove?.Invoke();
+            //}
         }
 
         private void StartGame()
@@ -50,7 +42,7 @@ namespace Klondike.Core
                     givenCards++;
                 }
             }
-            while (givenCards < Deck.DECK_SIZE)
+            while (givenCards < PlayableDeck.DECK_SIZE)
             {
                 stock.AddCardToStock(deck.GetNextCard());
                 givenCards++;

@@ -1,23 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using Klondike.UI;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Klondike.Core
 {
-    public class Stock : MonoBehaviour
+    public class Deck : MonoBehaviour, IValidArea
     {
 
+        #region Serialized Fields
         [SerializeField] private List<PlayableCard> availableCards = new List<PlayableCard>(); // only for showing in the inspector
         [SerializeField] private List<PlayableCard> discardedCards = new List<PlayableCard>(); // only for showing in the inspector
         [SerializeField] private Image stockImage = default;
         [SerializeField] private RectTransform wastePile = default;
         [SerializeField] private Sprite[] stockSprites = default;
         [SerializeField] private GameObject cardPrefab = default;
+        #endregion
 
+        #region Attributes
         private Stack<PlayableCard> coveredCards = new Stack<PlayableCard>();
         private Stack<PlayableCard> uncoveredCards = new Stack<PlayableCard>();
+        #endregion
+
+        #region Properties
+        public string SpotName { get { return gameObject.name; } }
+
+        #endregion
 
         // Start is called before the first frame update
         void Start()
@@ -99,9 +106,34 @@ namespace Klondike.Core
             uncoveredCards.Push(turnedCard);
             //Debug.Log(string.Format("Card {0} moved from covered to uncovered", turnedCard));
             var newCard = Instantiate(cardPrefab, transform.position, Quaternion.identity);
+            newCard.gameObject.name = turnedCard.ToString();
             newCard.transform.SetParent(wastePile, false);
             newCard.GetComponent<Card>().SetCardDetails(turnedCard);
             discardedCards.Add(turnedCard); // only for showing in the inspector
+        }
+
+
+        public void DetachCard(GameObject cardGO)
+        {
+            var cardToRemove = uncoveredCards.Pop();
+            discardedCards.Remove(cardToRemove);
+            // TO DO: Aggiornare la carta mostrata
+        }
+
+        public void AppendCard(GameObject cardGO)
+        {
+            Debug.LogError("[Deck] ERROR: trying to append a card to the waste pile");
+        }
+
+        /// <summary>
+        /// Check if the given card can be appended to the Safe Spot.
+        /// By the rules of the game, a card can never be appended on the waste pile.
+        /// </summary>
+        /// <param name="cardToAppend">the card to append</param>
+        /// <returns> TRUE if the card can be appended, FALSE otherwise</returns>
+        public bool CanAppendCard(PlayableCard cardDetails)
+        {
+            return false;
         }
 
         private void OnDestroy()

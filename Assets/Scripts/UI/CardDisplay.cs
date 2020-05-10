@@ -19,12 +19,12 @@ namespace Klondike.UI
 
         private void OnEnable()
         {
-            cardDetail = GetComponent<Card>().CardDetails;
-            ChangeCardDetails(cardDetail);
+            //cardDetail = GetComponent<Card>().CardDetails;
+            //ChangeCardDetails(cardDetail);
             GetComponent<Card>().OnValuesChanged += ChangeCardDetails;
         }
 
-        private void ChangeCardDetails(PlayableCard newDetails)
+        public void ChangeCardDetails(PlayableCard newDetails)
         {
             if (newDetails != null)
             {
@@ -33,6 +33,11 @@ namespace Klondike.UI
                 rankSR.color = ChooseRankColor(newDetails.suit);
                 suitSR.sprite = iconSR.sprite = ChooseSuitSprite(newDetails.suit);
             }
+        }
+
+        private void OnDestroy()
+        {
+            GetComponent<Card>().OnValuesChanged -= ChangeCardDetails;
         }
 
         private Color ChooseRankColor(CardSuit suit)
@@ -66,10 +71,6 @@ namespace Klondike.UI
             return rankSprites[(int)rank - 1];
         }
 
-        private void OnDestroy()
-        {
-            GetComponent<Card>().OnValuesChanged -= ChangeCardDetails;
-        }
 
         public IEnumerator Flip()
         {

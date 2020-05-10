@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using Klondike.Utils;
+﻿using Klondike.Utils;
 
 namespace Klondike.Core
 {
@@ -41,18 +40,5 @@ namespace Klondike.Core
             return string.Format("{0} - {1} of {2} - {3}", (int)rank + ((int)suit - 1) * 13, rank, suit, cardColor);
         }
 
-        /// <summary>
-        /// Check if the given card can be appended to the parent Card.
-        /// By the rules of the game, a card can be appended only if it has a different color and the immediately prior rank
-        /// </summary>
-        /// <param name="parentCard">the potential child</param>
-        /// <param name="cardToAppend"> the potential parent</param>
-        /// <returns></returns>
-        public static bool CanBeAppended(PlayableCard cardToAppend, PlayableCard parentCard)
-        {
-            Debug.Log(string.Format("Attempting to append {0} to {1}", cardToAppend, parentCard));
-            bool canBeAppended = (parentCard.cardColor != cardToAppend.cardColor && (int)cardToAppend.rank == (int)parentCard.rank - 1);
-            return canBeAppended;
-        }
     }
 }

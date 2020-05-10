@@ -3,14 +3,14 @@ using Klondike.Utils;
 
 namespace Klondike.Core
 {
-    public class Deck
+    public class PlayableDeck
     {
         public const int DECK_SIZE = 52;
 
         private PlayableCard[] deckArray = new PlayableCard[DECK_SIZE];
         private int currentIndex = 0;
 
-        public Deck()
+        public PlayableDeck()
         {
             for (int deckIndex = 0, suitIndex = 1; deckIndex < deckArray.Length; suitIndex++)
             {
