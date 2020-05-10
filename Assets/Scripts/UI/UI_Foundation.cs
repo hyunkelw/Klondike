@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Klondike.UI
 {
 
-    public class FoundationDisplay : MonoBehaviour
+    public class UI_Foundation : MonoBehaviour
     {
         [SerializeField] private Image suitSR = default;
         [SerializeField] private Sprite[] suitSprites = default;

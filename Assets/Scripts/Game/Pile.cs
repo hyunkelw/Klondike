@@ -10,7 +10,7 @@ namespace Klondike.Core
         #region Serialized Fields
         [SerializeField] private List<PlayableCard> onPileCards = new List<PlayableCard>(); // only for showing in the inspector
         [SerializeField] private GameObject cardPrefab = default;
-        [SerializeField] private float offset = -15f;
+        //[SerializeField] private float offset = -15f;
         #endregion
 
         #region Attributes
@@ -35,9 +35,21 @@ namespace Klondike.Core
 
             }
         }
-
         public string SpotName { get { return gameObject.name; } }
-
+        public Vector2 SpotPosition
+        {
+            get
+            {
+                if (currentPile.Count > 0)
+                {
+                    return currentPile.Last.Value.GetComponent<RectTransform>().position;
+                }
+                else
+                {
+                    return GetComponent<RectTransform>().pivot;
+                }
+            }
+        }
         #endregion
 
         private void OnEnable()
@@ -73,14 +85,12 @@ namespace Klondike.Core
             if (currentPile.Count > 0)
             {
                 var lastCard = currentPile.Last.Value.GetComponent<Card>();
-                if(!lastCard.IsFaceUp)
+                if (!lastCard.IsFaceUp)
                 {
                     lastCard.Flip();
                 }
             }
         }
-
-
 
         /// <summary>
         /// Detach the card (and every card attached below) from this pile
@@ -89,7 +99,7 @@ namespace Klondike.Core
         public void DetachCard(GameObject cardGO)
         {
             Debug.Log(string.Format("[Pile] Attempting to remove card {0} from {1}", cardGO.gameObject.name, SpotName));
-            
+
             // Before Detaching the card, check if it's not the bottom card. If it is, need to detach everything from that point onwards
             try
             {
@@ -97,12 +107,11 @@ namespace Klondike.Core
                 while (node != null)
                 {
                     var nextNode = node.Next;
-                    
+
                     currentPile.Remove(node);
                     onPileCards.Remove(node.Value.GetComponent<Card>().CardDetails); // only for showing in the inspector
                     node = nextNode;
                 }
-                GameManager.OnValidMove?.Invoke();
             }
             catch (System.InvalidOperationException e)
             {
@@ -128,7 +137,6 @@ namespace Klondike.Core
                 currentPile.AddLast(childCard.gameObject);
                 onPileCards.Add(childCard.CardDetails); // only for showing in the inspector
             }
-            GameManager.OnValidMove?.Invoke();
         }
 
 

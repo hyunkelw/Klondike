@@ -21,11 +21,13 @@ namespace Klondike.Core
         #region Properties
         public CardSuit Suit { get { return suit; } }
         public string SpotName { get { return gameObject.name; } }
+        public Vector2 SpotPosition { get { return GetComponent<RectTransform>().anchoredPosition; } }
+        public CardRank currentRank { get { return stackedCards.Count == 0 ? CardRank.NONE : stackedCards.Peek().rank; } }
         #endregion
 
         private void OnValidate()
         {
-            GetComponentInChildren<FoundationDisplay>().ChangeSuitDetails(Suit);
+            GetComponentInChildren<UI_Foundation>().ChangeSuitDetails(Suit);
         }
 
         public void AppendCard(GameObject cardGO)
@@ -38,6 +40,7 @@ namespace Klondike.Core
             stackedCards.Push(cardGO.GetComponent<Card>().CardDetails);
 
             availableCards.Add(cardGO.GetComponent<Card>().CardDetails); // only for showing in the inspector
+            GameManager.OnFoundationsUpdated?.Invoke();
         }
 
         public bool CanAppendCard(PlayableCard cardToAppend)
@@ -52,7 +55,7 @@ namespace Klondike.Core
                 var parentCard = stackedCards.Peek();
                 canBeAppended = suit == cardToAppend.suit && (int)cardToAppend.rank == (int)parentCard.rank + 1;
             }
-                        
+
             Debug.Log(string.Format("Attempting to append {0} to {1} - {2}", cardToAppend, SpotName, canBeAppended ? "Success" : "Failed"));
             return canBeAppended;
         }

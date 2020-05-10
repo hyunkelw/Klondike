@@ -49,7 +49,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
 
     private void OnValidate()
     {
-        GetComponentInChildren<CardDisplay>().ChangeCardDetails(CardDetails);
+        GetComponentInChildren<UI_CardDisplay>().ChangeCardDetails(CardDetails);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -117,7 +117,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
     public void Flip()
     {
         isFaceUp = !isFaceUp;
-        StartCoroutine(GetComponentInChildren<CardDisplay>().Flip(isFaceUp));
+        StartCoroutine(GetComponentInChildren<UI_CardDisplay>().Flip(isFaceUp));
     }
 
     //private void ReturnToPosition()
