@@ -30,6 +30,8 @@ namespace Klondike.Game
 
         private IValidArea leavingSpot;
         private IValidArea landingSpot;
+
+        private float currentClickTime, lastClickTime;
         #endregion
 
         #region Properties
@@ -144,7 +146,8 @@ namespace Klondike.Game
         {
             if (!isFaceUp) { return; }
 
-            if (eventData.clickCount > 1)
+            currentClickTime = eventData.clickTime;
+            if (Mathf.Abs(currentClickTime - lastClickTime) < 0.75f)
             {
                 leavingSpot = GetComponentInParent<IValidArea>();
                 landingSpot = GameManager.Singleton.AutoMove(this);
@@ -152,8 +155,20 @@ namespace Klondike.Game
                 {
                     StartCoroutine(PerformMove());
                 }
-                
             }
+            lastClickTime = currentClickTime;
+
+
+            //    if (eventData.clickCount > 1)
+            //{
+            //    leavingSpot = GetComponentInParent<IValidArea>();
+            //    landingSpot = GameManager.Singleton.AutoMove(this);
+            //    if (CanPerformMove())
+            //    {
+            //        StartCoroutine(PerformMove());
+            //    }
+
+            //}
         }
     }
 
