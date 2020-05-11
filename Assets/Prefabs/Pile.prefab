@@ -60,13 +60,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f4a59fcab6143440b394ba69d502fcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  availableCards: []
   onPileCards: []
   cardPrefab: {fileID: 1401289211917295586, guid: c66a6fcd8ca98db4494922a1007f2474,
     type: 3}
-  coveredCardPrefab: {fileID: 1401289211917295586, guid: 08da5cbf3ad53f14fb8a96f0a02c4f31,
-    type: 3}
-  offset: -134
 --- !u!114 &4651589379915347926
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,13 +81,13 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 1
-  m_Spacing: -134
+  m_Spacing: -110
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
   m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
+  m_ChildScaleWidth: 1
+  m_ChildScaleHeight: 1
 --- !u!225 &3772082527584878577
 CanvasGroup:
   m_ObjectHideFlags: 0

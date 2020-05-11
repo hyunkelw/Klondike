@@ -46,7 +46,7 @@ namespace Klondike.Core
                 }
                 else
                 {
-                    return GetComponent<RectTransform>().pivot;
+                    return GetComponent<RectTransform>().position;
                 }
             }
         }
@@ -155,8 +155,9 @@ namespace Klondike.Core
         /// </summary>
         /// <param name="cardToAppend">the card to append</param>
         /// <returns> TRUE if the card can be appended, FALSE otherwise</returns>
-        public bool CanAppendCard(PlayableCard cardToAppend)
+        public bool CanAppendCard(GameObject cardToAppendGO)
         {
+            var cardToAppend = cardToAppendGO.GetComponent<Card>().CardDetails;
             bool canBeAppended;
             // if the pile is empty, the only appendable card is a King
             if (currentPile.Count == 0)

@@ -94,12 +94,6 @@ namespace Klondike.UI
                 transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, progress);
                 yield return null;
             }
-            //for (var t = 0f; t < 1; t += Time.deltaTime / rotationTime)
-            //{
-            //    transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, t);
-            //    yield return null;
-            //}
-
         }
     }
 

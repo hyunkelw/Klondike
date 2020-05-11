@@ -97,7 +97,7 @@ namespace Klondike.Core
         {
             foreach (var spot in spots)
             {
-                if (spot.CanAppendCard(card.CardDetails) )
+                if (spot.CanAppendCard(card.gameObject) )
                 {
                     Debug.Log(string.Format("[GameManager] card {0} can be moved onto {1}", card.name, spot.SpotName));
                     return;

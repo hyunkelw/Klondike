@@ -135,7 +135,7 @@ namespace Klondike.Core
         /// </summary>
         /// <param name="cardToAppend">the card to append</param>
         /// <returns> TRUE if the card can be appended, FALSE otherwise</returns>
-        public bool CanAppendCard(PlayableCard cardDetails)
+        public bool CanAppendCard(GameObject cardToAppend)
         {
             return false;
         }

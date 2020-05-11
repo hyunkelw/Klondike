@@ -112,7 +112,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         canvasGroup.alpha = 1f;
 
         // if the card has landed on a Safe Spot, attempt to append
-        if (landingSpot != null && landingSpot.CanAppendCard(CardDetails))
+        if (landingSpot != null && landingSpot.CanAppendCard(gameObject))
         {
             Debug.Log(string.Format("ended on {0}", landingSpot.SpotName));
             StartCoroutine(SwitchMove());

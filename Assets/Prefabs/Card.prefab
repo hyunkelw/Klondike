@@ -227,7 +227,6 @@ MonoBehaviour:
     rank: 1
     cardColor: 1
   isFaceUp: 0
-  speed: 3500
   travelTime: 0.2
 --- !u!114 &8619697081123745688
 MonoBehaviour:
