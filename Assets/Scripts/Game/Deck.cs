@@ -23,6 +23,7 @@ namespace Klondike.Core
 
         #region Properties
         public string SpotName { get { return gameObject.name; } }
+        public Vector3 SpotPosition { get { return GetComponent<RectTransform>().position; } }
 
         #endregion
 
@@ -77,6 +78,7 @@ namespace Klondike.Core
             {
                 RecreateStock();
             }
+            GameManager.OnValidMove?.Invoke();
         }
 
         private void RecreateStock()
@@ -106,6 +108,7 @@ namespace Klondike.Core
             uncoveredCards.Push(turnedCard);
             //Debug.Log(string.Format("Card {0} moved from covered to uncovered", turnedCard));
             var newCard = Instantiate(cardPrefab, transform.position, Quaternion.identity);
+
             newCard.gameObject.name = turnedCard.ToString();
             newCard.transform.SetParent(wastePile, false);
             newCard.GetComponent<Card>().SetCardDetails(turnedCard);
@@ -132,7 +135,7 @@ namespace Klondike.Core
         /// </summary>
         /// <param name="cardToAppend">the card to append</param>
         /// <returns> TRUE if the card can be appended, FALSE otherwise</returns>
-        public bool CanAppendCard(PlayableCard cardDetails)
+        public bool CanAppendCard(GameObject cardToAppend)
         {
             return false;
         }

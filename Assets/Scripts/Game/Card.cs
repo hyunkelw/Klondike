@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
 using Klondike.Core;
-using Klondike.UI;
+using Klondike.UI; // serve solo per le prove in Editor
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
 
     public Action<PlayableCard> OnValuesChanged;
@@ -14,8 +14,8 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
     [SerializeField] public GameObject appendSlot = default;
     [SerializeField] private PlayableCard cardDetails = default;
     [SerializeField] private bool isFaceUp = false;
-    [SerializeField] private float speed = 3500f;
-    
+    [SerializeField] private float travelTime = .4f;
+
     #endregion
 
     #region Attributes
@@ -23,12 +23,10 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
 
-    private Vector2 dragStartPosition;
+    private Vector3 dragStartPosition;
 
     private IValidArea leavingSpot;
     private IValidArea landingSpot;
-
-
     #endregion
 
     #region Properties
@@ -45,19 +43,27 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
     private void OnEnable()
     {
         canvas = GameObject.FindGameObjectWithTag("Game Canvas").GetComponent<Canvas>();
+        //startPosition = rectTransform.position;
     }
 
     private void OnValidate()
     {
-        GetComponentInChildren<CardDisplay>().ChangeCardDetails(CardDetails);
+        GetComponentInChildren<UI_CardDisplay>().ChangeCardDetails(CardDetails);
+    }
+
+    public void SetCardDetails(PlayableCard card)
+    {
+        cardDetails = card;
+        OnValuesChanged?.Invoke(CardDetails);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!isFaceUp)        { return; }
+        if (!isFaceUp) { return; }
+
         canvasGroup.alpha = .2f;
         // Save Drag Start Position for the translation animation
-        dragStartPosition = rectTransform.anchoredPosition;
+        dragStartPosition = rectTransform.position;
         // save the leaving spot for future usage
         leavingSpot = GetComponentInParent<IValidArea>();
         if (leavingSpot != null)
@@ -65,17 +71,33 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
             Debug.Log(string.Format("[Card] Detaching from {0}", leavingSpot.SpotName));
         }
 
-        //Debug.Log(string.Format("[Card] Drag begun at {0}", rectTransform.anchoredPosition));
         canvasGroup.blocksRaycasts = false;
 
         //appendSlot.GetComponent<CanvasGroup>().enabled = false; // disattivo il suo slot per evitare comportamenti insoliti
+
         // TO DO: fare in modo che la carta sia sempre sopra a tutte le altre
+    }
+
+    private IEnumerator MoveTo(Vector3 spotPosition)
+    {
+        float progress = 0f;
+        var startPosition = rectTransform.position;
+        while (progress < 1)
+        {
+            progress += Time.deltaTime / travelTime ;
+            rectTransform.position = Vector3.Lerp(startPosition, spotPosition, progress);
+            yield return null;
+        }
+        
+        Debug.Log("Coroutine Ended");
     }
 
     public void OnDrag(PointerEventData eventData)
     {
         if (!isFaceUp) { return; }
+        //rectTransform.position += new Vector3(eventData.delta.x, eventData.delta.y, 0f) / canvas.scaleFactor;
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -90,54 +112,42 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
         canvasGroup.alpha = 1f;
 
         // if the card has landed on a Safe Spot, attempt to append
-        if (landingSpot != null && landingSpot.CanAppendCard(CardDetails))
+        if (landingSpot != null && landingSpot.CanAppendCard(gameObject))
         {
             Debug.Log(string.Format("ended on {0}", landingSpot.SpotName));
-            leavingSpot.DetachCard(gameObject);
-            landingSpot.AppendCard(gameObject);
-            GameManager.OnValidMove?.Invoke();
+            StartCoroutine(SwitchMove());
+     
         }
         else // if the card didn't land on a Safe Spot, or cannot append, return to position
         {
-            StartCoroutine(ReturnToPosition());
+            StartCoroutine(MoveTo(dragStartPosition));
             //ReturnToPosition();
         }
     }
 
-    private IEnumerator ReturnToPosition()
+    private IEnumerator SwitchMove()
     {
-        while (rectTransform.anchoredPosition != dragStartPosition)
-        {
-            rectTransform.anchoredPosition = Vector2.MoveTowards(rectTransform.anchoredPosition, dragStartPosition, speed * Time.deltaTime);
-            yield return null;
-        }
-
+        yield return StartCoroutine(MoveTo(landingSpot.SpotPosition));
+        leavingSpot.DetachCard(gameObject);
+        landingSpot.AppendCard(gameObject);
+        GameManager.OnValidMove?.Invoke();
     }
+
 
     public void Flip()
     {
         isFaceUp = !isFaceUp;
-        StartCoroutine(GetComponentInChildren<CardDisplay>().Flip(isFaceUp));
+        StartCoroutine(GetComponentInChildren<UI_CardDisplay>().Flip(isFaceUp));
     }
 
-    //private void ReturnToPosition()
-    //{
-    //    rectTransform.anchoredPosition = dragStartPosition;
-    //}
-
-
-    // TO DO : questo servirà per il doppio click e l'automove?
-    public void OnPointerDown(PointerEventData eventData)
+    public void OnPointerClick(PointerEventData eventData)
     {
-        //Debug.Log("OnPointerDown");
-        //Flip();
-    }
-
-
-    public void SetCardDetails(PlayableCard card)
-    {
-        cardDetails = card;
-        OnValuesChanged?.Invoke(CardDetails);
+        if (!isFaceUp) { return; }
+        if (eventData.clickCount > 1)
+        {
+            GameManager.Singleton.AutoMove(this);
+            Debug.Log("[Card] Double Clicked!");
+        }
     }
 }
 

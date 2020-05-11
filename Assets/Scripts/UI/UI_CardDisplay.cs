@@ -6,14 +6,13 @@ using UnityEngine.UI;
 
 namespace Klondike.UI
 {
-    public class CardDisplay : MonoBehaviour
+    public class UI_CardDisplay : MonoBehaviour
     {
         [SerializeField] private Image rankSR = default;
         [SerializeField] private Image suitSR = default;
         [SerializeField] private Image iconSR = default;
         [SerializeField] private Image coverSR = default;
         [SerializeField] private float rotationTime = .2f;
-
 
         [SerializeField] private Sprite[] rankSprites = default;
         [SerializeField] private Sprite[] suitSprites = default;
@@ -95,12 +94,6 @@ namespace Klondike.UI
                 transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, progress);
                 yield return null;
             }
-            //for (var t = 0f; t < 1; t += Time.deltaTime / rotationTime)
-            //{
-            //    transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, t);
-            //    yield return null;
-            //}
-
         }
     }
 
