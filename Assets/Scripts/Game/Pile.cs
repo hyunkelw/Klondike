@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using Klondike.Core;
 using UnityEngine;
 
-namespace Klondike.Core
+namespace Klondike.Game
 {
     public class Pile : MonoBehaviour, IValidArea
     {
@@ -10,7 +11,6 @@ namespace Klondike.Core
         #region Serialized Fields
         [SerializeField] private List<PlayableCard> onPileCards = new List<PlayableCard>(); // only for showing in the inspector
         [SerializeField] private GameObject cardPrefab = default;
-        //[SerializeField] private float offset = -15f;
         #endregion
 
         #region Attributes
@@ -54,7 +54,6 @@ namespace Klondike.Core
 
         private void OnEnable()
         {
-            //GameManager.OnValidMove += TurnNextAvailableCard;
             GameManager.OnStartGame += TurnNextCard;
             GameManager.OnValidMove += TurnNextCard;
         }
@@ -127,10 +126,8 @@ namespace Klondike.Core
             cardRT.anchoredPosition = Vector2.zero;
             cardRT.SetParent(AppendSlot.GetComponent<RectTransform>(), false);
             cardRT.anchorMin = cardRT.anchorMax = ANCHOR_CENTER;
-            // Add the card and all his children to the current Pile
-            //currentPile.AddLast(cardGO);
-            //onPileCards.Add(cardGO.GetComponent<Card>().CardDetails); // only for showing in the inspector
 
+            // Add the card and all his children to the current Pile
             var children = cardGO.GetComponentsInChildren<Card>();
             foreach (var childCard in children)
             {
@@ -139,10 +136,8 @@ namespace Klondike.Core
             }
         }
 
-
         private void OnDestroy()
         {
-            //GameManager.OnValidMove -= TurnNextAvailableCard;
             GameManager.OnValidMove -= TurnNextCard;
             GameManager.OnStartGame -= TurnNextCard;
             currentPile.Clear();
