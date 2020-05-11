@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Klondike.Utils;
 using UnityEngine;
 
@@ -14,6 +15,8 @@ namespace Klondike.Core
         [SerializeField] private Foundation[] foundations = default;
 
         private int movesCounter = 0;
+        private int score = 0;
+        private List<IValidArea> spots = new List<IValidArea>();
 
         public static Action OnValidMove, OnStartGame, OnFoundationsUpdated;
 
@@ -22,6 +25,8 @@ namespace Klondike.Core
         private void Awake()
         {
             SetupSingleton();
+            spots.AddRange(foundations);
+            spots.AddRange(piles);
         }
 
 
@@ -85,6 +90,18 @@ namespace Klondike.Core
         private void OnDestroy()
         {
             OnValidMove -= UpdateMovesCounter;
+        }
+
+        public void AutoMove(Card card)
+        {
+            foreach (var spot in spots)
+            {
+                if (spot.CanAppendCard(card.CardDetails) )
+                {
+                    Debug.Log(string.Format("[GameManager] card {0} can be moved onto {1}", card.name, spot.SpotName));
+                    return;
+                }
+            }
         }
     }
 }

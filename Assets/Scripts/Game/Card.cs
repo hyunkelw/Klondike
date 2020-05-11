@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
 using Klondike.Core;
-using Klondike.UI;
+using Klondike.UI; // serve solo per le prove in Editor
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
 
     public Action<PlayableCard> OnValuesChanged;
@@ -27,8 +27,6 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
 
     private IValidArea leavingSpot;
     private IValidArea landingSpot;
-
-
     #endregion
 
     #region Properties
@@ -52,9 +50,16 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
         GetComponentInChildren<UI_CardDisplay>().ChangeCardDetails(CardDetails);
     }
 
+    public void SetCardDetails(PlayableCard card)
+    {
+        cardDetails = card;
+        OnValuesChanged?.Invoke(CardDetails);
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (!isFaceUp)        { return; }
+
         canvasGroup.alpha = .2f;
         // Save Drag Start Position for the translation animation
         dragStartPosition = rectTransform.anchoredPosition;
@@ -65,10 +70,10 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
             Debug.Log(string.Format("[Card] Detaching from {0}", leavingSpot.SpotName));
         }
 
-        //Debug.Log(string.Format("[Card] Drag begun at {0}", rectTransform.anchoredPosition));
         canvasGroup.blocksRaycasts = false;
 
         //appendSlot.GetComponent<CanvasGroup>().enabled = false; // disattivo il suo slot per evitare comportamenti insoliti
+
         // TO DO: fare in modo che la carta sia sempre sopra a tutte le altre
     }
 
@@ -126,18 +131,15 @@ public class Card : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDrag
     //}
 
 
-    // TO DO : questo servirà per il doppio click e l'automove?
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        //Debug.Log("OnPointerDown");
-        //Flip();
-    }
 
-
-    public void SetCardDetails(PlayableCard card)
+    public void OnPointerClick(PointerEventData eventData)
     {
-        cardDetails = card;
-        OnValuesChanged?.Invoke(CardDetails);
+        if (!isFaceUp) { return; }
+        if (eventData.clickCount > 1)
+        {
+            GameManager.Singleton.AutoMove(this);
+            Debug.Log("[Card] Double Clicked!");
+        }
     }
 }
 
