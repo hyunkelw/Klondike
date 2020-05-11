@@ -23,7 +23,7 @@ namespace Klondike.Core
 
         #region Properties
         public string SpotName { get { return gameObject.name; } }
-        public Vector2 SpotPosition { get { return GetComponent<RectTransform>().anchoredPosition; } }
+        public Vector3 SpotPosition { get { return GetComponent<RectTransform>().position; } }
 
         #endregion
 

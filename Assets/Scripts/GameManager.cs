@@ -16,6 +16,7 @@ namespace Klondike.Core
 
         private int movesCounter = 0;
         private int score = 0;
+        private float elapsedTime = 0;
         private List<IValidArea> spots = new List<IValidArea>();
 
         public static Action OnValidMove, OnStartGame, OnFoundationsUpdated;

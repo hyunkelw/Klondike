@@ -21,7 +21,7 @@ namespace Klondike.Core
         #region Properties
         public CardSuit Suit { get { return suit; } }
         public string SpotName { get { return gameObject.name; } }
-        public Vector2 SpotPosition { get { return GetComponent<RectTransform>().anchoredPosition; } }
+        public Vector3 SpotPosition { get { return GetComponent<RectTransform>().position; } }
         public CardRank currentRank { get { return stackedCards.Count == 0 ? CardRank.NONE : stackedCards.Peek().rank; } }
         #endregion
 

@@ -7,7 +7,7 @@ namespace Klondike.Core
 
 		string SpotName { get; }
 
-		Vector2 SpotPosition { get; }
+		Vector3 SpotPosition { get; }
 
 		void DetachCard(GameObject cardGO);
 

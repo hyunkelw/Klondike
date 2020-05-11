@@ -14,8 +14,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     [SerializeField] public GameObject appendSlot = default;
     [SerializeField] private PlayableCard cardDetails = default;
     [SerializeField] private bool isFaceUp = false;
-    [SerializeField] private float speed = 3500f;
-    
+    [SerializeField] private float travelTime = .4f;
+
     #endregion
 
     #region Attributes
@@ -23,7 +23,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
 
-    private Vector2 dragStartPosition;
+    private Vector3 dragStartPosition;
 
     private IValidArea leavingSpot;
     private IValidArea landingSpot;
@@ -43,6 +43,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private void OnEnable()
     {
         canvas = GameObject.FindGameObjectWithTag("Game Canvas").GetComponent<Canvas>();
+        //startPosition = rectTransform.position;
     }
 
     private void OnValidate()
@@ -58,11 +59,11 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!isFaceUp)        { return; }
+        if (!isFaceUp) { return; }
 
         canvasGroup.alpha = .2f;
         // Save Drag Start Position for the translation animation
-        dragStartPosition = rectTransform.anchoredPosition;
+        dragStartPosition = rectTransform.position;
         // save the leaving spot for future usage
         leavingSpot = GetComponentInParent<IValidArea>();
         if (leavingSpot != null)
@@ -77,10 +78,26 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         // TO DO: fare in modo che la carta sia sempre sopra a tutte le altre
     }
 
+    private IEnumerator MoveTo(Vector3 spotPosition)
+    {
+        float progress = 0f;
+        var startPosition = rectTransform.position;
+        while (progress < 1)
+        {
+            progress += Time.deltaTime / travelTime ;
+            rectTransform.position = Vector3.Lerp(startPosition, spotPosition, progress);
+            yield return null;
+        }
+        
+        Debug.Log("Coroutine Ended");
+    }
+
     public void OnDrag(PointerEventData eventData)
     {
         if (!isFaceUp) { return; }
+        //rectTransform.position += new Vector3(eventData.delta.x, eventData.delta.y, 0f) / canvas.scaleFactor;
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -98,39 +115,30 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         if (landingSpot != null && landingSpot.CanAppendCard(CardDetails))
         {
             Debug.Log(string.Format("ended on {0}", landingSpot.SpotName));
-            leavingSpot.DetachCard(gameObject);
-            landingSpot.AppendCard(gameObject);
-            GameManager.OnValidMove?.Invoke();
+            StartCoroutine(SwitchMove());
+     
         }
         else // if the card didn't land on a Safe Spot, or cannot append, return to position
         {
-            StartCoroutine(ReturnToPosition());
+            StartCoroutine(MoveTo(dragStartPosition));
             //ReturnToPosition();
         }
     }
 
-    private IEnumerator ReturnToPosition()
+    private IEnumerator SwitchMove()
     {
-        while (rectTransform.anchoredPosition != dragStartPosition)
-        {
-            rectTransform.anchoredPosition = Vector2.MoveTowards(rectTransform.anchoredPosition, dragStartPosition, speed * Time.deltaTime);
-            yield return null;
-        }
-
+        yield return StartCoroutine(MoveTo(landingSpot.SpotPosition));
+        leavingSpot.DetachCard(gameObject);
+        landingSpot.AppendCard(gameObject);
+        GameManager.OnValidMove?.Invoke();
     }
+
 
     public void Flip()
     {
         isFaceUp = !isFaceUp;
         StartCoroutine(GetComponentInChildren<UI_CardDisplay>().Flip(isFaceUp));
     }
-
-    //private void ReturnToPosition()
-    //{
-    //    rectTransform.anchoredPosition = dragStartPosition;
-    //}
-
-
 
     public void OnPointerClick(PointerEventData eventData)
     {

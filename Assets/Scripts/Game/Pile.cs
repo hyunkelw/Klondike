@@ -36,13 +36,13 @@ namespace Klondike.Core
             }
         }
         public string SpotName { get { return gameObject.name; } }
-        public Vector2 SpotPosition
+        public Vector3 SpotPosition
         {
             get
             {
                 if (currentPile.Count > 0)
                 {
-                    return currentPile.Last.Value.GetComponent<RectTransform>().position;
+                    return currentPile.Last.Value.GetComponent<Card>().appendSlot.GetComponent<RectTransform>().position;
                 }
                 else
                 {
