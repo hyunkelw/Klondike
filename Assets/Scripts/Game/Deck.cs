@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using Klondike.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Klondike.Core
+namespace Klondike.Game
 {
     public class Deck : MonoBehaviour, IValidArea
     {
@@ -27,7 +28,6 @@ namespace Klondike.Core
 
         #endregion
 
-        // Start is called before the first frame update
         void Start()
         {
             // FOR TESTING PURPOSES ONLY - THE INITIAL LOAD WILL BE DONE BY GAME MANAGER

@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using Klondike.Core;
 using Klondike.UI;
 using Klondike.Utils;
 using UnityEngine;
 
-namespace Klondike.Core
+namespace Klondike.Game
 {
     public class Foundation : MonoBehaviour, IValidArea
     {

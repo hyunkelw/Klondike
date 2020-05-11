@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Klondike.Core;
+using Klondike.Game;
 using Klondike.Utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,8 +20,6 @@ namespace Klondike.UI
 
         private void OnEnable()
         {
-            //cardDetail = GetComponent<Card>().CardDetails;
-            //ChangeCardDetails(cardDetail);
             GetComponent<Card>().OnValuesChanged += ChangeCardDetails;
         }
 

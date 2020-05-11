@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
-using Klondike.Core;
+using Klondike.Game;
 
 namespace Klondike.UI
 {
@@ -8,7 +8,7 @@ namespace Klondike.UI
     public class UI_Moves : MonoBehaviour
     {
         /*Reference to moves counter text */
-        [SerializeField] private TextMeshProUGUI movesCounter;
+        [SerializeField] private TextMeshProUGUI movesCounter = default;
 
 
         private void OnEnable()

@@ -1,27 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using Klondike.Core;
 using Klondike.Utils;
 using UnityEngine;
 
-namespace Klondike.Core
+namespace Klondike.Game
 {
 
     public class GameManager : MonoSingleton<GameManager>
     {
-        PlayableDeck deck = new PlayableDeck();
+        public static Action OnValidMove, OnStartGame, OnFoundationsUpdated;
 
+        #region Serialized Fields
         [SerializeField] private Pile[] piles = default;
         [SerializeField] private Deck stock = default;
         [SerializeField] private Foundation[] foundations = default;
+        #endregion
 
+        #region Attributes
+        private PlayableDeck deck = new PlayableDeck();
         private int movesCounter = 0;
         private int score = 0;
-        private float elapsedTime = 0;
         private List<IValidArea> spots = new List<IValidArea>();
+        #endregion
 
-        public static Action OnValidMove, OnStartGame, OnFoundationsUpdated;
-
-        public int Moves { get { return movesCounter; } }
+        #region Properties
+        public int Moves { get { return movesCounter; } } 
+        #endregion
 
         private void Awake()
         {
@@ -43,24 +48,17 @@ namespace Klondike.Core
             {
                 if (foundation.currentRank != CardRank.K)
                 {
-                    Debug.Log("Not won yet...");
+                    //Debug.Log("Not won yet...");
                     return;
                 }
             }
             Debug.Log("Game Won..");
         }
 
-        // Start is called before the first frame update
         void Start()
         {
             deck.Shuffle();
             StartGame();
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
         }
 
         public void StartGame()
@@ -70,7 +68,6 @@ namespace Klondike.Core
             {
                 for (int j = 0; j < i + 1; j++)
                 {
-                    //piles[i].AddCoveredCardToPile(deck.GetNextCard());
                     piles[i].AddCardToPile(deck.GetNextCard());
                     givenCards++;
                 }
@@ -88,21 +85,23 @@ namespace Klondike.Core
             movesCounter++;
         }
 
+        public IValidArea AutoMove(Card card)
+        {
+            foreach (var spot in spots)
+            {
+                if (spot.CanAppendCard(card.gameObject))
+                {
+                    Debug.Log(string.Format("[GameManager] card {0} can be moved onto {1}", card.name, spot.SpotName));
+                    // TO DO: perform the move 
+                    return spot;
+                }
+            }
+            return null;
+        }
         private void OnDestroy()
         {
             OnValidMove -= UpdateMovesCounter;
         }
 
-        public void AutoMove(Card card)
-        {
-            foreach (var spot in spots)
-            {
-                if (spot.CanAppendCard(card.gameObject) )
-                {
-                    Debug.Log(string.Format("[GameManager] card {0} can be moved onto {1}", card.name, spot.SpotName));
-                    return;
-                }
-            }
-        }
     }
 }
