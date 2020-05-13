@@ -7,16 +7,24 @@ namespace Klondike.Game
 {
     public class GameTimer : MonoBehaviour
     {
+
+        #region Serialized Fields
         [SerializeField] private TextMeshProUGUI gameTimer = default;
+        #endregion
 
-        private bool gameStarted;
+        #region Attributes
+        private bool gameStarted = false;
         private float preparationTime = 0f, elapsedTime = 0f;
+        #endregion
 
-        public int ElapsedTime { get { return TimeSpan.FromSeconds(elapsedTime - preparationTime).Seconds; } }
+        #region Properties
+        public int ElapsedTime { get { return TimeSpan.FromSeconds(elapsedTime - preparationTime).Seconds; } } 
+        #endregion
 
         private void OnEnable()
         {
-            GameManager.OnStartGame += GameStarted;
+            GameManager.OnStartGame += ToggleGameStatus;
+            GameManager.OnEndGame += ToggleGameStatus;
         }
 
         void Update()
@@ -35,19 +43,20 @@ namespace Klondike.Game
         {
             elapsedTime += 1 * Time.deltaTime;
 
-            TimeSpan time = TimeSpan.FromSeconds(elapsedTime - preparationTime);
+            TimeSpan time = TimeSpan.FromSeconds(elapsedTime);
             gameTimer.text = string.Format("{0:00}:{1:00}", time.Minutes, time.Seconds);
 
         }
 
-        private void GameStarted()
+        private void ToggleGameStatus()
         {
-            gameStarted = true;
+            gameStarted = !gameStarted;
         }
 
         private void OnDisable()
         {
-            GameManager.OnStartGame -= GameStarted;
+            GameManager.OnStartGame -= ToggleGameStatus;
+            GameManager.OnEndGame -= ToggleGameStatus;
         }
 
     }

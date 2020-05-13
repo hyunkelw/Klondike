@@ -1,15 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Klondike.Core;
-using Klondike.UI;
 using Klondike.Utils;
 using UnityEngine;
 
 namespace Klondike.Game
 {
-    public class Foundation : MonoBehaviour, IValidArea
+    public class Foundation : MonoBehaviour, IValidArea   
     {
+        public Action<CardSuit> OnValidated;
+
         #region Serialized Fields
         [SerializeField] private CardSuit suit = CardSuit.NONE;
+
+        [Header("For Debugging purposes Only")]
         [SerializeField] private List<PlayableCard> availableCards = new List<PlayableCard>(); // only for showing in the inspector 
         #endregion
 
@@ -22,13 +26,13 @@ namespace Klondike.Game
         #region Properties
         public CardSuit Suit { get { return suit; } }
         public string SpotName { get { return gameObject.name; } }
-        public Vector3 SpotPosition { get { return GetComponent<RectTransform>().position; } }
+        public RectTransform SpotPosition { get { return GetComponent<RectTransform>(); } }
         public CardRank currentRank { get { return stackedCards.Count == 0 ? CardRank.NONE : stackedCards.Peek().rank; } }
         #endregion
 
         private void OnValidate()
         {
-            GetComponentInChildren<UI_Foundation>().ChangeSuitDetails(Suit);
+            OnValidated?.Invoke(Suit);
         }
 
         public void AppendCard(GameObject cardGO)
@@ -73,7 +77,7 @@ namespace Klondike.Game
                 canBeAppended = suit == cardToAppend.suit && (int)cardToAppend.rank == (int)parentCard.rank + 1;
             }
 
-            Debug.Log(string.Format("Attempting to append {0} to {1} - {2}", cardToAppendGO, SpotName, canBeAppended ? "Success" : "Failed"));
+            //Debug.Log(string.Format("[Foundation] Attempting to append {0} to {1} - {2}", cardToAppendGO, SpotName, canBeAppended ? "Success" : "Failed"));
             return canBeAppended;
         }
 
