@@ -4,7 +4,6 @@ using Klondike.Game;
 
 namespace Klondike.UI
 {
-
     public class UI_Moves : MonoBehaviour
     {
         /*Reference to moves counter text */
@@ -20,7 +19,7 @@ namespace Klondike.UI
         {
             if (!movesCounter)
             {
-                Debug.LogWarning("[MovesDisplay] Moves Counter not setted!");
+                Debug.LogWarning("[UI_Moves] Moves Counter not setted!");
                 return;
             }
             movesCounter.text = GameManager.Singleton.Moves.ToString();
@@ -29,7 +28,6 @@ namespace Klondike.UI
         private void OnDestroy()
         {
             GameManager.OnValidMove -= UpdateMovesCounter;
-
         }
     }
 }

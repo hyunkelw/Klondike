@@ -6,7 +6,19 @@
 
     public enum CardRank { NONE, ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, J, Q, K, COUNT }
 
-    public enum Constraint { PORTRAIT, LANDSCAPE }
+	public enum MoveType
+	{
+		NONE,
+		WASTE_TO_TABLEAU,
+		WASTE_TO_FOUNDATION,
+		TABLEAU_TO_FOUNDATION,
+		FLIP,
+		FOUNDATION_TO_TABLEAU,
+		RECYCLE_WASTE
+	}
+
+
+	public enum Constraint { PORTRAIT, LANDSCAPE }
 
 	public enum AnchorType
 	{

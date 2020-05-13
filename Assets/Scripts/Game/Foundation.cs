@@ -38,9 +38,7 @@ namespace Klondike.Game
         public void AppendCard(GameObject cardGO)
         {
             RectTransform cardRT = cardGO.GetComponent<RectTransform>();
-            cardRT.anchoredPosition = Vector2.zero;
-            cardRT.SetParent(this.transform, false);
-            cardRT.anchorMin = cardRT.anchorMax = ANCHOR_CENTER;
+            cardRT.SetParent(GetComponent<RectTransform>(), true);
 
             stackedCards.Push(cardGO.GetComponent<Card>().CardDetails);
 

@@ -6,9 +6,6 @@ namespace Klondike.Game
 {
     public class Pile : MonoBehaviour, IValidArea
     {
-        private readonly Vector2 ANCHOR_TOP = new Vector2(.5f, 1f);
-        private readonly Vector2 ANCHOR_CENTER = new Vector2(.5f, .5f);
-
         #region Serialized Fields
         [Header("For Debugging purposes Only")]
         [SerializeField] private List<PlayableCard> onPileCards = new List<PlayableCard>(); // only for showing in the inspector
@@ -36,18 +33,19 @@ namespace Klondike.Game
         }
         public string SpotName { get { return gameObject.name; } }
         public RectTransform SpotPosition { get { return AppendSlot.GetComponent<RectTransform>(); } }
+        public GameObject FirstCardFacedUpOfPile { get; private set; }
         #endregion
 
         private void OnEnable()
         {
-            GameManager.OnValidMove += TurnNextCard;
+            //GameManager.OnValidMove += TurnNextCard;
         }
 
         /// <summary>
         /// Adds the given Card to the Pile
         /// </summary>
         /// <param name="cardToAdd"> the Card being Added to the Stock Pile</param>
-        public void AddCardToPile(GameObject cardToAdd)
+        public void AddCardToPile(GameObject cardToAdd, bool isFaceUp)
         {
             currentPile.AddLast(cardToAdd);
             onPileCards.Add(cardToAdd.GetComponent<Card>().CardDetails); // only for showing in the inspector
@@ -60,15 +58,17 @@ namespace Klondike.Game
         {
             if (currentPile.Count > 0)
             {
-                var lastCard = currentPile.Last.Value.GetComponent<Card>();
-                if (!lastCard.IsFaceUp)
+                var lastCard = currentPile.Last.Value;
+                if (!lastCard.GetComponent<Card>().IsFaceUp)
                 {
-                    lastCard.Flip();
+                    GameMove gameMove = new GameMove(this, this, lastCard);
+                    GameManager.Singleton.HandleNewMove(gameMove);
                 }
+                
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Check if the given card can be appended to the to the Safe Spot.
         /// By the rules of the game, a card can be appended at the bottom of a Pile
         /// only if it has a different color and the immediately prior rank
@@ -96,10 +96,7 @@ namespace Klondike.Game
         public void AppendCard(GameObject cardGO)
         {
             RectTransform cardRT = cardGO.GetComponent<RectTransform>();
-            cardRT.anchoredPosition = Vector2.zero;
-            cardRT.SetParent(AppendSlot.GetComponent<RectTransform>(), false);
-
-            cardRT.anchorMin = cardRT.anchorMax = ANCHOR_CENTER;
+            cardRT.SetParent(AppendSlot.GetComponent<RectTransform>(), true);
 
             // Add the card and all his children to the current Pile
             var children = cardGO.GetComponentsInChildren<Card>();
@@ -130,6 +127,8 @@ namespace Klondike.Game
                     onPileCards.Remove(node.Value.GetComponent<Card>().CardDetails); // only for showing in the inspector
                     node = nextNode;
                 }
+                // TEST;
+                TurnNextCard();
             }
             catch (System.InvalidOperationException e)
             {
@@ -141,7 +140,7 @@ namespace Klondike.Game
 
         private void OnDestroy()
         {
-            GameManager.OnValidMove -= TurnNextCard;
+            //GameManager.OnValidMove -= TurnNextCard;
             currentPile.Clear();
         }
 

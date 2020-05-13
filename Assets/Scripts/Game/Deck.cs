@@ -71,7 +71,7 @@ namespace Klondike.Game
             // If there are still available cards, show a covered card sprite
             deckImage.sprite = coveredCards.Count > 0 ? deckSprites[0] : deckSprites[1];
 
-            GameManager.OnValidMove?.Invoke();
+            //GameManager.OnValidMove?.Invoke();
         }
 
         private void RecreateStock()
@@ -167,7 +167,6 @@ namespace Klondike.Game
                     node = node.Previous;
                 }
             }
-
         }
 
         private void OnDestroy()

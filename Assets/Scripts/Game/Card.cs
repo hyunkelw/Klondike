@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using Klondike.Core;
+using Klondike.Utils;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -18,6 +20,9 @@ namespace Klondike.Game
         [SerializeField] private PlayableCard cardDetails = default;
         [SerializeField] private bool isFaceUp = false;
         [SerializeField] private float travelTime = .4f;
+        [SerializeField] private RectTransform pippo;
+        [SerializeField] private Vector3 testPosition;
+        Coroutine coroutineToEnd;
         #endregion
 
         #region Attributes
@@ -113,7 +118,7 @@ namespace Klondike.Game
             if (CanPerformMove())
             {
                 Debug.Log(string.Format("[Card] ended on {0}", landingSpot.SpotName));
-                yield return StartCoroutine(PerformMove());
+                CreateMove();
             }
             else // if the card didn't land on a Safe Spot, or cannot append, return to position
             {
@@ -134,12 +139,18 @@ namespace Klondike.Game
             return landingSpot != null && landingSpot.CanAppendCard(gameObject);
         }
 
-        private IEnumerator PerformMove()
+        private void CreateMove()
         {
-            yield return StartCoroutine(TravelTo(landingSpot.SpotPosition));
-            leavingSpot.DetachCard(gameObject);
-            landingSpot.AppendCard(gameObject);
-            GameManager.OnValidMove?.Invoke();
+            GameMove gameMove = new GameMove(leavingSpot, landingSpot, gameObject);
+            GameManager.Singleton.HandleNewMove(gameMove);
+            //gameMove.Execute();
+            //GameManager.OnValidMove?.Invoke();
+        }
+
+        public void startTravel(RectTransform destination)
+        {
+            StartCoroutine(TravelTo(destination));
+
         }
 
         #region Click/Drag Behaviour
@@ -197,10 +208,10 @@ namespace Klondike.Game
             if (Mathf.Abs(currentClickTime - lastClickTime) < 0.75f)
             {
                 leavingSpot = GetComponentInParent<IValidArea>();
-                landingSpot = GameManager.Singleton.AutoMove(this);
+                landingSpot = GameManager.Singleton.Hint(this);
                 if (CanPerformMove())
                 {
-                    StartCoroutine(PerformMove());
+                    CreateMove();
                 }
             }
             lastClickTime = currentClickTime;

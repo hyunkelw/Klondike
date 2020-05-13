@@ -10,11 +10,12 @@ namespace Klondike.Game
 
     public class GameManager : MonoSingleton<GameManager>
     {
-        public static Action OnValidMove, OnStartGame, OnFoundationsUpdated, OnEndGame;
+        public static Action OnStartGame, OnFoundationsUpdated, OnEndGame;
+        public static Action OnValidMove;
 
         #region Serialized Fields
         [SerializeField] private Pile[] piles = default;
-        [SerializeField] private Deck stock = default;
+        [SerializeField] private Deck gameDeck = default;
         [SerializeField] private Foundation[] foundations = default;
         [SerializeField] private RectTransform spawnPoint = default;
         [SerializeField] private GameObject cardPrefab = default;
@@ -22,13 +23,14 @@ namespace Klondike.Game
 
         #region Attributes
         private PlayableDeck deck = new PlayableDeck();
-        private int movesCounter = 0;
-        private int score = 0;
         private List<IValidArea> spots = new List<IValidArea>();
+        private Stack<GameMove> movesList = new Stack<GameMove>();
         #endregion
 
         #region Properties
-        public int Moves { get { return movesCounter; } }
+        public int Score { get; private set; } = 0;
+        public int Moves { get; private set; } = 0;
+        public int RevertableMoves { get { return movesList.Count; } }
         #endregion
 
         private void Awake()
@@ -41,7 +43,6 @@ namespace Klondike.Game
 
         private void OnEnable()
         {
-            OnValidMove += UpdateMovesCounter;
             OnFoundationsUpdated += CheckWinCondition;
         }
 
@@ -77,16 +78,42 @@ namespace Klondike.Game
             }
             while (givenCards < PlayableDeck.DECK_SIZE)
             {
-                stock.AddCardToStock(deck.GetNextCard());
+                gameDeck.AddCardToStock(deck.GetNextCard());
+                yield return new WaitForEndOfFrame();
                 givenCards++;
             }
             OnStartGame?.Invoke();
         }
 
-        private void UpdateMovesCounter()
+        public void HandleNewMove(GameMove move)
         {
-            movesCounter++;
+            movesList.Push(move);
+            Score += move.PointsAwarded;
+            if (!move.IsFlip)
+            {
+                Moves++;
+            }
+            move.Execute();
+            OnValidMove?.Invoke();
         }
+
+        public void UndoMove()
+        {
+            if(movesList.Count == 0) { return; }
+
+            var move = movesList.Pop();
+            Score -= move.PointsAwarded;
+            move.Undo();
+            if (move.IsFlip)
+            {
+                move = movesList.Pop();
+                move.Undo();
+                Score -= move.PointsAwarded;
+            }
+            Moves++;
+            OnValidMove?.Invoke();
+        }
+
 
         public IEnumerator CreateCard(Pile pile, PlayableCard cardToAdd, bool lastCardOfPile)
         {
@@ -100,11 +127,11 @@ namespace Klondike.Game
             newCard.GetComponent<RectTransform>().position = spawnPoint.position;
 
             StartCoroutine(newCard.GetComponent<Card>().TravelTo(pile.SpotPosition, lastCardOfPile));
-            pile.AddCardToPile(newCard);
+            pile.AddCardToPile(newCard, lastCardOfPile);
 
         }
 
-        public IValidArea AutoMove(Card card)
+        public IValidArea Hint(Card card)
         {
             foreach (var spot in spots)
             {
@@ -115,10 +142,6 @@ namespace Klondike.Game
                 }
             }
             return null;
-        }
-        private void OnDestroy()
-        {
-            OnValidMove -= UpdateMovesCounter;
         }
 
     }
