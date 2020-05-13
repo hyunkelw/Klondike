@@ -2,7 +2,6 @@
 
 namespace Klondike.Core
 {
-
     [System.Serializable]
     public class PlayableCard
     {

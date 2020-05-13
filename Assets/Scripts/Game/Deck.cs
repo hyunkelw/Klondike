@@ -9,23 +9,26 @@ namespace Klondike.Game
     {
 
         #region Serialized Fields
+        [SerializeField] private Image deckImage = default;
+        [SerializeField] private RectTransform spawnPoint = default;
+        [SerializeField] private RectTransform[] wastePile = default;
+        [SerializeField] private Sprite[] deckSprites = default;
+        [SerializeField] private GameObject cardPrefab = default;
+
+        [Header("For Debugging purposes Only")]
         [SerializeField] private List<PlayableCard> availableCards = new List<PlayableCard>(); // only for showing in the inspector
         [SerializeField] private List<PlayableCard> discardedCards = new List<PlayableCard>(); // only for showing in the inspector
-        [SerializeField] private Image stockImage = default;
-        [SerializeField] private RectTransform wastePile = default;
-        [SerializeField] private Sprite[] stockSprites = default;
-        [SerializeField] private GameObject cardPrefab = default;
         #endregion
 
         #region Attributes
         private Stack<PlayableCard> coveredCards = new Stack<PlayableCard>();
-        private Stack<PlayableCard> uncoveredCards = new Stack<PlayableCard>();
+        private LinkedList<GameObject> currentWastePile = new LinkedList<GameObject>();
         #endregion
 
         #region Properties
         public string SpotName { get { return gameObject.name; } }
-        public Vector3 SpotPosition { get { return GetComponent<RectTransform>().position; } }
-
+        public RectTransform SpotPosition { get { return GetComponent<RectTransform>(); } }
+        public RectTransform WastePileSlot { get { return wastePile[Mathf.Clamp(currentWastePile.Count, 0, wastePile.Length - 1)]; } }
         #endregion
 
         void Start()
@@ -37,7 +40,6 @@ namespace Klondike.Game
             }
         }
 
-
         /// <summary>
         /// Adds the given Card to the covered Stock Pile
         /// </summary>
@@ -45,7 +47,6 @@ namespace Klondike.Game
         public void AddCardToStock(PlayableCard cardToAdd)
         {
             coveredCards.Push(cardToAdd);
-
             availableCards.Add(cardToAdd); // only for showing in the inspector
         }
 
@@ -56,77 +57,74 @@ namespace Klondike.Game
         /// </summary>
         public void TurnNextAvailableCard()
         {
-            // if there are still available cards in deck, turn the top one
-            if (coveredCards.Count > 0)
+            if (coveredCards.Count == 0)
             {
-                PlayableCard turnedCard = coveredCards.Pop();
-                AddCardToWastePile(turnedCard);
-                availableCards.Remove(turnedCard); // only for showing in the inspector
-
-                // If there are still available cards, show a covered card sprite
-                if (coveredCards.Count > 0)
-                {
-                    //Debug.Log("Next available card in pile: " + coveredCards.Peek());
-                    stockImage.sprite = stockSprites[0];
-                }
-                else
-                {
-                    stockImage.sprite = stockSprites[1];
-                }
-            }
-            else // No more cards, recreate the pile from the waste pile
-            {
+                if (currentWastePile.Count == 0) { return; }
                 RecreateStock();
             }
+
+            // turn the top available card in the deck
+            PlayableCard turnedCard = coveredCards.Pop();
+            AddCardToWastePile(turnedCard);
+            availableCards.Remove(turnedCard); // only for showing in the inspector
+
+            // If there are still available cards, show a covered card sprite
+            deckImage.sprite = coveredCards.Count > 0 ? deckSprites[0] : deckSprites[1];
+
             GameManager.OnValidMove?.Invoke();
         }
 
         private void RecreateStock()
         {
-            // cycle through all cards of the waste pile, and add them back to the stock
-            while (uncoveredCards.Count > 0)
+            var node = currentWastePile.Last;
+            while (currentWastePile.Count > 0)
             {
-                PlayableCard cardToAdd = uncoveredCards.Pop();
-                AddCardToStock(cardToAdd);
-
-                discardedCards.Remove(cardToAdd); // only for showing in the inspector
-            }
-            FlushWastePile();
-            stockImage.sprite = stockSprites[0];
-        }
-
-        private void FlushWastePile()
-        {
-            foreach (Transform cardTransform in wastePile.transform)
-            {
-                Destroy(cardTransform.gameObject);
+                if (node != null)
+                {
+                    var nextNode = node.Previous;
+                    PlayableCard cardToAdd = node.Value.GetComponent<Card>().CardDetails;
+                    AddCardToStock(cardToAdd);
+                    currentWastePile.Remove(node);
+                    Destroy(node.Value);
+                    discardedCards.Remove(cardToAdd); // only for showing in the inspector
+                    node = nextNode;
+                }
             }
         }
 
         private void AddCardToWastePile(PlayableCard turnedCard)
         {
-            uncoveredCards.Push(turnedCard);
-            //Debug.Log(string.Format("Card {0} moved from covered to uncovered", turnedCard));
-            var newCard = Instantiate(cardPrefab, transform.position, Quaternion.identity);
 
-            newCard.gameObject.name = turnedCard.ToString();
-            newCard.transform.SetParent(wastePile, false);
+            //Debug.Log(string.Format("[Deck] Card {0} moved from covered to uncovered", turnedCard));
+            // first of all, set the last card as non interactable;
+            if (currentWastePile.Last != null)
+            {
+                currentWastePile.Last.Value.GetComponent<Card>().ToggleInteractable();
+            }
+
+            var newCard = Instantiate(cardPrefab);
             newCard.GetComponent<Card>().SetCardDetails(turnedCard);
-            newCard.GetComponent<Card>().Flip();
+            newCard.gameObject.name = turnedCard.ToString();
+
+            newCard.transform.SetParent(transform, false); // non mi serve sia figlia delle rect transform degli slot 
+            newCard.GetComponent<RectTransform>().position = spawnPoint.position;
+            StartCoroutine(newCard.GetComponent<Card>().TravelTo(WastePileSlot, true));
+
+            // Shift all previously occupied slots to the left
+            if (currentWastePile.Count > wastePile.Length - 1)
+            {
+                var node = currentWastePile.Last;
+                for (int i = wastePile.Length - 1; i >= 1; i--)
+                {
+                    var cardToShift = node.Value.GetComponent<Card>();
+                    StartCoroutine(cardToShift.TravelTo(wastePile[i - 1]));
+                    node = node.Previous;
+                }
+            }
+
+            newCard.GetComponent<Card>().ToggleInteractable();
+            currentWastePile.AddLast(newCard);
             discardedCards.Add(turnedCard); // only for showing in the inspector
-        }
-
-
-        public void DetachCard(GameObject cardGO)
-        {
-            var cardToRemove = uncoveredCards.Pop();
-            discardedCards.Remove(cardToRemove);
-            // TO DO: Aggiornare la carta mostrata
-        }
-
-        public void AppendCard(GameObject cardGO)
-        {
-            Debug.LogError("[Deck] ERROR: trying to append a card to the waste pile");
         }
 
         /// <summary>
@@ -140,10 +138,42 @@ namespace Klondike.Game
             return false;
         }
 
+        public void AppendCard(GameObject cardGO)
+        {
+            Debug.LogError("[Deck] ERROR: trying to append a card to the waste pile");
+        }
+
+        public void DetachCard(GameObject cardGO)
+        {
+            var cardToRemove = cardGO.GetComponent<Card>().CardDetails;
+            discardedCards.Remove(cardToRemove);
+            currentWastePile.Remove(cardGO);
+
+            // if there are no cards left, do nothing more
+            if (currentWastePile.Count == 0) { return; }
+
+            // make the last (after the removal) card as interactable
+            var nextCard = currentWastePile.Last.Value.GetComponent<Card>();
+            nextCard.ToggleInteractable();
+
+            // if the cards left in the waste pile are more than the available waste slots, shift right
+            if (currentWastePile.Count > wastePile.Length - 1)
+            {
+                var node = currentWastePile.Last;
+                for (int i = wastePile.Length - 1; i >= 1; i--)
+                {
+                    var cardToShift = node.Value.GetComponent<Card>();
+                    StartCoroutine(cardToShift.TravelTo(wastePile[i]));
+                    node = node.Previous;
+                }
+            }
+
+        }
+
         private void OnDestroy()
         {
             coveredCards.Clear();
-            uncoveredCards.Clear();
+            currentWastePile.Clear();
         }
 
     }

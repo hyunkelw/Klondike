@@ -7,8 +7,11 @@ using UnityEngine.UI;
 
 namespace Klondike.UI
 {
+    [ExecuteInEditMode]
     public class UI_CardDisplay : MonoBehaviour
     {
+
+        #region Serialized Fields
         [SerializeField] private Image rankSR = default;
         [SerializeField] private Image suitSR = default;
         [SerializeField] private Image iconSR = default;
@@ -17,10 +20,12 @@ namespace Klondike.UI
 
         [SerializeField] private Sprite[] rankSprites = default;
         [SerializeField] private Sprite[] suitSprites = default;
+        #endregion
 
         private void OnEnable()
         {
-            GetComponent<Card>().OnValuesChanged += ChangeCardDetails;
+            GetComponentInParent<Card>().OnValuesChanged += ChangeCardDetails;
+            GetComponentInParent<Card>().OnFlip += PerformFlipAnimation;
         }
 
         public void ChangeCardDetails(PlayableCard newDetails)
@@ -33,10 +38,37 @@ namespace Klondike.UI
             }
         }
 
-        private void OnDestroy()
+        private void PerformFlipAnimation(bool toFaceUp)
         {
-            GetComponent<Card>().OnValuesChanged -= ChangeCardDetails;
+            StartCoroutine(Flip(toFaceUp));
         }
+
+        private IEnumerator Flip(bool toFaceUp)
+        {
+            // First, rotate to 90 degrees 
+            var startingRotation = Quaternion.identity;
+            var endingRotation = Quaternion.AngleAxis(90f, toFaceUp ? Vector3.up : Vector3.down);
+            for (var t = 0f; t < 1; t += Time.deltaTime / rotationTime)
+            {
+                transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, t);
+                yield return null;
+            }
+
+            // then, deactivate the cover sprite 
+            coverSR.gameObject.SetActive(!toFaceUp);
+
+            // finally, return to initial position
+            startingRotation = transform.rotation;
+            endingRotation = Quaternion.identity;
+            var progress = 0f;
+            while (transform.rotation != endingRotation)
+            {
+                progress += Time.deltaTime / rotationTime;
+                transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, progress);
+                yield return null;
+            }
+        }
+
 
         private Color ChooseRankColor(CardSuit suit)
         {
@@ -66,34 +98,18 @@ namespace Klondike.UI
 
         private Sprite ChooseRankSprite(CardRank rank)
         {
+            //var spriteName = "Solitario/carte/numeri carte/new/" + rank;
+            //var toRet = Resources.Load<Sprite>(spriteName);
             return rankSprites[(int)rank - 1];
         }
 
-
-        public IEnumerator Flip(bool toFaceUp)
+        private void OnDisable()
         {
-            // First, rotate to 90 degrees 
-            var startingRotation = Quaternion.identity;
-            var endingRotation = Quaternion.AngleAxis(90f, toFaceUp ? Vector3.up : Vector3.down);
-            for (var t = 0f; t < 1; t += Time.deltaTime / rotationTime)
-            {
-                transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, t);
-                yield return null;
-            }
-            // then, deactivate the cover sprite 
-            coverSR.gameObject.SetActive(!toFaceUp);
+            var card = GetComponentInParent<Card>();
+            if (card == null) { return; }
 
-            // finally, return to initial position
-            startingRotation = transform.rotation;
-            endingRotation = Quaternion.identity;
-            var progress = 0f;
-            while (transform.rotation != endingRotation)
-            {
-                progress += Time.deltaTime / rotationTime;
-                transform.rotation = Quaternion.Lerp(startingRotation, endingRotation, progress);
-                yield return null;
-            }
+            card.OnValuesChanged -= ChangeCardDetails;
+            card.OnFlip -= PerformFlipAnimation;
         }
     }
-
 }
