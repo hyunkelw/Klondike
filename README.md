@@ -1,2 +1,2 @@
 # ColloquioWhatWapp
-Replica del loro Solitario Classico
+Replica del Solitario Classico
