@@ -74,7 +74,7 @@ namespace Klondike.Game
         public override string ToString()
         {
             return string.Format("{0} - Moved from {1} to {2} - {3} points awarded", Card, from.SpotName, to.SpotName, PointsAwarded);
-        } 
+        }
         #endregion
 
         public void Execute()
@@ -82,12 +82,18 @@ namespace Klondike.Game
             switch (MoveType)
             {
                 case MoveType.FLIP:
+                {
                     Card.GetComponent<Card>().StartFlip();
                     break;
+                }
                 case MoveType.FETCH_CARD:
                 case MoveType.RECYCLE_WASTE:
+                //case MoveType.WASTE_TO_TABLEAU:
+                //case MoveType.WASTE_TO_FOUNDATION:
+                {
                     from.Execute?.Invoke(this);
                     break;
+                }
                 default:
                 {
                     Card.GetComponent<Card>().startTravel(to.SpotPosition);
@@ -104,12 +110,18 @@ namespace Klondike.Game
             switch (MoveType)
             {
                 case MoveType.FLIP:
+                {
                     Card.GetComponent<Card>().StartFlip();
                     break;
+                }
                 case MoveType.FETCH_CARD:
                 case MoveType.RECYCLE_WASTE:
+                //case MoveType.WASTE_TO_TABLEAU:
+                //case MoveType.WASTE_TO_FOUNDATION:
+                {
                     from.Undo?.Invoke(this);
                     break;
+                }
                 default:
                 {
                     Card.GetComponent<Card>().startTravel(from.SpotPosition);

@@ -56,6 +56,14 @@ namespace Klondike.Game
                 case MoveType.RECYCLE_WASTE:
                     StartCoroutine(RecycleWaste());
                     break;
+                case MoveType.WASTE_TO_FOUNDATION:
+                    FetchCard();
+                    break;
+                case MoveType.WASTE_TO_TABLEAU:
+                    StartCoroutine(RecycleWaste());
+                    break;
+
+
                 default:
                     Debug.LogError("[Deck] the move to execute doesn't belong to this object");
                     break;
@@ -274,12 +282,37 @@ namespace Klondike.Game
 
         public void AppendCard(GameObject cardGO)
         {
-            Debug.LogError("[Deck] ERROR: trying to append a card to the waste pile");
+            var siblingIndex = 1;
+            // if there are other cards in the waste pile, take the bottom one, set it as non interactable and get its sibling index
+            if (WasteBottomCard != null)
+            {
+                siblingIndex = WasteBottomCard.GetComponent<RectTransform>().GetSiblingIndex();
+                WasteBottomCard.GetComponent<Card>().ToggleInteractable();
+            }
+            var cardComponent = cardGO.GetComponent<Card>();
+
+            StartCoroutine(cardComponent.TravelTo(WastePileSlot));
+            cardGO.transform.SetParent(GetComponent<RectTransform>(), true);
+            cardGO.transform.SetSiblingIndex(siblingIndex + 1);
+
+            // Shift all previously occupied slots to the left if needed
+            if (currentWastePile.Count > wastePile.Length - 1)
+            {
+                var node = currentWastePile.Last;
+                for (int i = wastePile.Length - 1; i >= 1; i--)
+                {
+                    var cardToShift = node.Value.GetComponent<Card>();
+                    StartCoroutine(cardToShift.TravelTo(wastePile[i - 1]));
+                    node = node.Previous;
+                }
+            }
+            currentWastePile.AddLast(cardGO);
+
+            //Debug.LogError("[Deck] ERROR: trying to append a card to the waste pile");
         }
 
         public void DetachCard(GameObject cardGO)
         {
-            var cardToRemove = cardGO.GetComponent<Card>().CardDetails;
             currentWastePile.Remove(cardGO);
 
             // if there are no cards left, do nothing more

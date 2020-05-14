@@ -84,8 +84,7 @@ namespace Klondike.Game
 
             }
             OnStartGame?.Invoke();
-            //while (givenCards < PlayableDeck.DECK_SIZE)
-            while (givenCards < 34)
+            while (givenCards < PlayableDeck.DECK_SIZE)
             {
                 CreateCardForDeck(deck.GetNextCard());
                 givenCards++;
