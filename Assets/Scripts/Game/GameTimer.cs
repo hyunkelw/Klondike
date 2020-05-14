@@ -44,6 +44,10 @@ namespace Klondike.Game
             elapsedTime += 1 * Time.deltaTime;
 
             TimeSpan time = TimeSpan.FromSeconds(elapsedTime);
+            //if (time.Seconds % 10 == 0 )
+            //{
+            //    GameManager.Singleton.AddPointsToScore(-2);
+            //}
             gameTimer.text = string.Format("{0:00}:{1:00}", time.Minutes, time.Seconds);
 
         }

@@ -9,6 +9,8 @@ namespace Klondike.Game
     public class Foundation : MonoBehaviour, IValidArea   
     {
         public Action<CardSuit> OnValidated;
+        public Action<GameMove> Execute => throw new NotImplementedException();
+        public Action<GameMove> Undo => throw new NotImplementedException();
 
         #region Serialized Fields
         [SerializeField] private CardSuit suit = CardSuit.NONE;

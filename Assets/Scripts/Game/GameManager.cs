@@ -11,7 +11,7 @@ namespace Klondike.Game
     public class GameManager : MonoSingleton<GameManager>
     {
         public static Action OnStartGame, OnFoundationsUpdated, OnEndGame;
-        public static Action OnValidMove;
+        public static Action OnValidMove, OnScoreUpdated;
 
         #region Serialized Fields
         [SerializeField] private Pile[] piles = default;
@@ -19,6 +19,7 @@ namespace Klondike.Game
         [SerializeField] private Foundation[] foundations = default;
         [SerializeField] private RectTransform spawnPoint = default;
         [SerializeField] private GameObject cardPrefab = default;
+        [SerializeField] private int score = 0;
         #endregion
 
         #region Attributes
@@ -28,7 +29,7 @@ namespace Klondike.Game
         #endregion
 
         #region Properties
-        public int Score { get; private set; } = 0;
+        public int Score { get { return score; } }
         public int Moves { get; private set; } = 0;
         public int RevertableMoves { get { return movesList.Count; } }
         #endregion
@@ -40,6 +41,11 @@ namespace Klondike.Game
             spots.AddRange(piles);
         }
 
+        public void AddPointsToScore(int points)
+        {
+            score = score + points >= 0 ? score + points : 0;
+            OnScoreUpdated?.Invoke();
+        }
 
         private void OnEnable()
         {
@@ -72,26 +78,31 @@ namespace Klondike.Game
             {
                 for (int j = 0; j < i + 1; j++)
                 {
-                    yield return StartCoroutine(CreateCard(piles[i], deck.GetNextCard(), j == i));
+                    yield return StartCoroutine(CreateCardForPile(piles[i], deck.GetNextCard(), j == i));
                     givenCards++;
                 }
-            }
-            while (givenCards < PlayableDeck.DECK_SIZE)
-            {
-                gameDeck.AddCardToStock(deck.GetNextCard());
-                yield return new WaitForEndOfFrame();
-                givenCards++;
+
             }
             OnStartGame?.Invoke();
+            //while (givenCards < PlayableDeck.DECK_SIZE)
+            while (givenCards < 34)
+            {
+                CreateCardForDeck(deck.GetNextCard());
+                givenCards++;
+            }
         }
 
         public void HandleNewMove(GameMove move)
         {
             movesList.Push(move);
-            Score += move.PointsAwarded;
-            if (!move.IsFlip)
+            AddPointsToScore(move.PointsAwarded);
+            if (move.MoveType == MoveType.RECYCLE_WASTE)
             {
-                Moves++;
+                AddPointsToScore(-100);
+            }
+            if (move.MoveType != MoveType.FLIP )
+            {
+                Moves++; // a flip is always associated to another move. So, increasing the counter will be done by the associated move;
             }
             move.Execute();
             OnValidMove?.Invoke();
@@ -99,36 +110,54 @@ namespace Klondike.Game
 
         public void UndoMove()
         {
-            if(movesList.Count == 0) { return; }
+            if (movesList.Count == 0) { return; }
 
             var move = movesList.Pop();
-            Score -= move.PointsAwarded;
+            AddPointsToScore(-move.PointsAwarded);
             move.Undo();
-            if (move.IsFlip)
+            if (move.MoveType != MoveType.FLIP)
             {
-                move = movesList.Pop();
-                move.Undo();
-                Score -= move.PointsAwarded;
+                Moves++;
+                OnValidMove?.Invoke();
             }
-            Moves++;
-            OnValidMove?.Invoke();
+            else
+            {
+                UndoMove(); // a flip is always associated to another move and doesn't count like one. So, undo that as well;
+            }
         }
 
 
-        public IEnumerator CreateCard(Pile pile, PlayableCard cardToAdd, bool lastCardOfPile)
+        public IEnumerator CreateCardForPile(Pile pile, PlayableCard cardToAdd, bool lastCardOfPile)
         {
 
             var newCard = Instantiate(cardPrefab);
-            yield return new WaitForSeconds(.15f);
+            yield return new WaitForSeconds(.1f);
 
             newCard.GetComponent<Card>().SetCardDetails(cardToAdd);
             newCard.gameObject.name = cardToAdd.ToString();
             newCard.transform.SetParent(pile.AppendSlot.GetComponent<RectTransform>(), false);
             newCard.GetComponent<RectTransform>().position = spawnPoint.position;
 
-            StartCoroutine(newCard.GetComponent<Card>().TravelTo(pile.SpotPosition, lastCardOfPile));
+            Coroutine travelCoroutine = StartCoroutine(newCard.GetComponent<Card>().TravelTo(pile.SpotPosition));
+            if (lastCardOfPile)
+            {
+                //yield return travelCoroutine;
+                StartCoroutine(newCard.GetComponent<Card>().Flip());
+            }
             pile.AddCardToPile(newCard, lastCardOfPile);
+        }
 
+        private void CreateCardForDeck(PlayableCard playableCard)
+        {
+            var newCard = Instantiate(cardPrefab);
+            newCard.GetComponent<Card>().SetCardDetails(playableCard);
+            newCard.gameObject.name = playableCard.ToString();
+
+            newCard.transform.SetParent(gameDeck.GetComponent<RectTransform>(), false); // non mi serve sia figlia delle rect transform degli slot 
+            newCard.transform.SetAsFirstSibling();
+            //newCard.SetActive(false);
+            newCard.GetComponent<RectTransform>().position = spawnPoint.position;
+            gameDeck.AddCardToStock(newCard);
         }
 
         public IValidArea Hint(Card card)

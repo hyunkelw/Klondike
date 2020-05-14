@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using Klondike.Core;
-using Klondike.Utils;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -20,9 +18,6 @@ namespace Klondike.Game
         [SerializeField] private PlayableCard cardDetails = default;
         [SerializeField] private bool isFaceUp = false;
         [SerializeField] private float travelTime = .4f;
-        [SerializeField] private RectTransform pippo;
-        [SerializeField] private Vector3 testPosition;
-        Coroutine coroutineToEnd;
         #endregion
 
         #region Attributes
@@ -75,16 +70,20 @@ namespace Klondike.Game
 
         public void ToggleInteractable()
         {
-            canvasGroup.blocksRaycasts = !canvasGroup.blocksRaycasts;
+            if (gameObject.activeInHierarchy)
+            {
+                canvasGroup.blocksRaycasts = !canvasGroup.blocksRaycasts;
+            }
         }
 
-        public void Flip()
+        public IEnumerator Flip()
         {
             isFaceUp = !isFaceUp;
             OnFlip?.Invoke(isFaceUp);
+            yield return null;
         }
 
-        public IEnumerator TravelTo(RectTransform destination, bool doFlip = false)
+        public IEnumerator TravelTo(RectTransform destination, bool doFlipAtEnd = false)
         {
             float progress = 0f;
             var startPosition = rectTransform.position;
@@ -94,9 +93,9 @@ namespace Klondike.Game
                 rectTransform.position = Vector3.Lerp(startPosition, destination.position, progress);
                 yield return null;
             }
-            if (doFlip)
+            if (doFlipAtEnd)
             {
-                Flip();
+                yield return Flip();
             }
         }
 
@@ -150,8 +149,13 @@ namespace Klondike.Game
         public void startTravel(RectTransform destination)
         {
             StartCoroutine(TravelTo(destination));
-
         }
+
+        public void StartFlip()
+        {
+            StartCoroutine(Flip());
+        }
+
 
         #region Click/Drag Behaviour
         public void OnBeginDrag(PointerEventData eventData)

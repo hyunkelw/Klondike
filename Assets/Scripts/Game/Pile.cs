@@ -1,11 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Klondike.Core;
+using Klondike.Utils;
 using UnityEngine;
 
 namespace Klondike.Game
 {
     public class Pile : MonoBehaviour, IValidArea
     {
+        public Action<GameMove> Execute => throw new NotImplementedException();
+        public Action<GameMove> Undo => throw new NotImplementedException();
+
         #region Serialized Fields
         [Header("For Debugging purposes Only")]
         [SerializeField] private List<PlayableCard> onPileCards = new List<PlayableCard>(); // only for showing in the inspector

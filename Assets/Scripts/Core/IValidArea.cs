@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using Klondike.Game;
+using UnityEngine;
 
 namespace Klondike.Core
 {
@@ -6,6 +8,8 @@ namespace Klondike.Core
 	{
 		string SpotName { get; }
 		RectTransform SpotPosition { get; }
+		Action<GameMove> Execute { get; }
+		Action<GameMove> Undo { get; }
 
 		/// <summary>
 		/// Check if the given card can be appended to the Safe Spot.

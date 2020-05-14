@@ -6,18 +6,23 @@ namespace Klondike.Game
 {
     public class GameMove
     {
+        #region Attributes
         private IValidArea from, to;
-        private GameObject card;
-        private MoveType moveType;
+        #endregion
 
-        public int PointsAwarded { get; private set; } 
-        public bool IsFlip { get { return moveType == MoveType.FLIP; } } 
+        #region Properties
+        public int PointsAwarded { get; private set; }
+        public MoveType MoveType { get; private set; }
+        public GameObject Card { get; private set; }
+        public bool IsFlip { get { return MoveType == MoveType.FLIP; } }
+        #endregion
 
+        #region Constructors and Overrides
         public GameMove(IValidArea leavingSpot, IValidArea landingSpot, GameObject whichCard)
         {
             from = leavingSpot;
             to = landingSpot;
-            card = whichCard;
+            Card = whichCard;
 
             int pointsToAward;
             switch (landingSpot)
@@ -25,73 +30,94 @@ namespace Klondike.Game
                 // From Waste to Tableu
                 case var dummyvar when leavingSpot is Deck && landingSpot is Pile:
                     pointsToAward = 5;
-                    moveType = MoveType.WASTE_TO_TABLEAU;
+                    MoveType = MoveType.WASTE_TO_TABLEAU;
                     break;
                 // From Waste to a Foundation
                 case var dummyvar when leavingSpot is Deck && landingSpot is Foundation:
                     pointsToAward = 10;
-                    moveType = MoveType.WASTE_TO_FOUNDATION;
+                    MoveType = MoveType.WASTE_TO_FOUNDATION;
                     break;
                 // From Tableau to Foundation
                 case var dummyvar when leavingSpot is Pile && landingSpot is Foundation:
                     pointsToAward = 10;
-                    moveType = MoveType.TABLEAU_TO_FOUNDATION;
+                    MoveType = MoveType.TABLEAU_TO_FOUNDATION;
                     break;
                 // From Flipping a card
                 case var dummyvar when leavingSpot == landingSpot && landingSpot is Pile:
                     pointsToAward = 5;
-                    moveType = MoveType.FLIP;
+                    MoveType = MoveType.FLIP;
                     break;
                 // From Foundation to Tableau
                 case var dummyvar when leavingSpot is Foundation && landingSpot is Pile:
                     pointsToAward = -15;
-                    moveType = MoveType.FOUNDATION_TO_TABLEAU;
+                    MoveType = MoveType.FOUNDATION_TO_TABLEAU;
+                    break;
+                // From fetching a card
+                case var dummyvar when leavingSpot == landingSpot && landingSpot is Deck && whichCard != null:
+                    pointsToAward = 0;
+                    MoveType = MoveType.FETCH_CARD;
                     break;
                 // From recycling the deck
-                case var dummyvar when leavingSpot == landingSpot && landingSpot is Deck:
-                    pointsToAward = -100;
-                    moveType = MoveType.RECYCLE_WASTE;
+                case var dummyvar when leavingSpot == landingSpot && landingSpot is Deck && whichCard == null:
+                    pointsToAward = 0;
+                    MoveType = MoveType.RECYCLE_WASTE;
                     break;
                 default:
                     pointsToAward = 0;
-                    moveType = MoveType.NONE;
+                    MoveType = MoveType.NONE;
                     break;
             }
-            
+
             PointsAwarded = pointsToAward;
         }
 
         public override string ToString()
         {
-            return string.Format("{0} - Moved from {1} to {2} - {3} points awarded", card,  from.SpotName, to.SpotName, PointsAwarded);
-        }
+            return string.Format("{0} - Moved from {1} to {2} - {3} points awarded", Card, from.SpotName, to.SpotName, PointsAwarded);
+        } 
+        #endregion
 
         public void Execute()
         {
-            if (moveType == MoveType.FLIP)
+            switch (MoveType)
             {
-                card.GetComponent<Card>().Flip();
-            }
-            else
-            {
-                card.GetComponent<Card>().startTravel(to.SpotPosition);
-                from.DetachCard(card.gameObject);
-                to.AppendCard(card.gameObject);
+                case MoveType.FLIP:
+                    Card.GetComponent<Card>().StartFlip();
+                    break;
+                case MoveType.FETCH_CARD:
+                case MoveType.RECYCLE_WASTE:
+                    from.Execute?.Invoke(this);
+                    break;
+                default:
+                {
+                    Card.GetComponent<Card>().startTravel(to.SpotPosition);
+                    from.DetachCard(Card.gameObject);
+                    to.AppendCard(Card.gameObject);
+                    break;
+                }
             }
         }
 
 
         public void Undo()
         {
-            if (moveType == MoveType.FLIP)
+            switch (MoveType)
             {
-                card.GetComponent<Card>().Flip();
-            }
-            else
-            {
-                card.GetComponent<Card>().startTravel(from.SpotPosition);
-                to.DetachCard(card.gameObject);
-                from.AppendCard(card.gameObject);
+                case MoveType.FLIP:
+                    Card.GetComponent<Card>().StartFlip();
+                    break;
+                case MoveType.FETCH_CARD:
+                case MoveType.RECYCLE_WASTE:
+                    from.Undo?.Invoke(this);
+                    break;
+                default:
+                {
+                    Card.GetComponent<Card>().startTravel(from.SpotPosition);
+                    to.DetachCard(Card.gameObject);
+                    from.AppendCard(Card.gameObject);
+                    break;
+                }
+
             }
         }
 

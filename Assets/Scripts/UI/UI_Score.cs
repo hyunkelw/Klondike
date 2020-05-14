@@ -12,7 +12,7 @@ namespace Klondike.UI
 
         private void OnEnable()
         {
-            GameManager.OnValidMove += UpdateScoreCounter;
+            GameManager.OnScoreUpdated += UpdateScoreCounter;
         }
 
         public void UpdateScoreCounter()
@@ -27,7 +27,7 @@ namespace Klondike.UI
 
         private void OnDestroy()
         {
-            GameManager.OnValidMove -= UpdateScoreCounter;
+            GameManager.OnScoreUpdated -= UpdateScoreCounter;
 
         }
     }
