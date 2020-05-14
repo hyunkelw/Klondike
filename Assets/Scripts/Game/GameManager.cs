@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Klondike.Core;
 using Klondike.Utils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Klondike.Game
 {
@@ -12,6 +14,10 @@ namespace Klondike.Game
     {
         public static Action OnStartGame, OnFoundationsUpdated, OnEndGame;
         public static Action OnValidMove, OnScoreUpdated;
+
+        public const int BONUS_POINTS_BASE = 20000;
+        public const int BONUS_POINTS_FACTOR = 35;
+        public const int BONUS_POINTS_TIMER_THRESHOLD = 30;
 
         #region Serialized Fields
         [SerializeField] private Pile[] piles = default;
@@ -37,8 +43,6 @@ namespace Klondike.Game
         private void Awake()
         {
             SetupSingleton();
-            spots.AddRange(foundations);
-            spots.AddRange(piles);
         }
 
         public void AddPointsToScore(int points)
@@ -61,13 +65,53 @@ namespace Klondike.Game
                     return;
                 }
             }
+
+            var totalTime = FindObjectOfType<GameTimer>().ElapsedTime;
+            if (totalTime > BONUS_POINTS_TIMER_THRESHOLD)
+            {
+                score += (BONUS_POINTS_BASE / totalTime) * BONUS_POINTS_FACTOR;
+            }
             OnEndGame?.Invoke();
+
             Debug.Log("[GameManager] Game Won..");
         }
 
         void Start()
         {
+            StartNewGame();
+        }
+
+        public void StartNewGame()
+        {
+            ResetGame();
+            deck = new PlayableDeck();
             deck.Shuffle();
+            Debug.Log("Starting new game");
+            StartCoroutine(InitializeAndStart());
+        }
+
+        public void ReplayGame()
+        {
+            ResetGame();
+            deck.Reset();
+            Debug.Log("Starting new game");
+            StartCoroutine(InitializeAndStart());
+        }
+
+        private IEnumerator InitializeAndStart()
+        {
+            var sceneLoading = SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
+            while (!sceneLoading.isDone)
+            {
+                yield return null;
+            }
+            foundations = FindObjectsOfType<Foundation>();
+            spots.AddRange(foundations);
+            piles = FindObjectsOfType<Pile>();
+            piles = piles.OrderBy(x => x.name).ToArray<Pile>();
+            spots.AddRange(piles);
+            gameDeck = FindObjectOfType<Deck>();
+            spawnPoint = gameDeck.SpawnPoint;
             StartCoroutine(StartGame());
         }
 
@@ -91,7 +135,7 @@ namespace Klondike.Game
             }
         }
 
-        public void HandleNewMove(GameMove move)
+         public void HandleNewMove(GameMove move)
         {
             movesList.Push(move);
             AddPointsToScore(move.PointsAwarded);
@@ -99,7 +143,7 @@ namespace Klondike.Game
             {
                 AddPointsToScore(-100);
             }
-            if (move.MoveType != MoveType.FLIP )
+            if (move.MoveType != MoveType.FLIP)
             {
                 Moves++; // a flip is always associated to another move. So, increasing the counter will be done by the associated move;
             }
@@ -124,7 +168,6 @@ namespace Klondike.Game
                 UndoMove(); // a flip is always associated to another move and doesn't count like one. So, undo that as well;
             }
         }
-
 
         public IEnumerator CreateCardForPile(Pile pile, PlayableCard cardToAdd, bool lastCardOfPile)
         {
@@ -154,7 +197,7 @@ namespace Klondike.Game
 
             newCard.transform.SetParent(gameDeck.GetComponent<RectTransform>(), false); // non mi serve sia figlia delle rect transform degli slot 
             newCard.transform.SetAsFirstSibling();
-            //newCard.SetActive(false);
+            
             newCard.GetComponent<RectTransform>().position = spawnPoint.position;
             gameDeck.AddCardToStock(newCard);
         }
@@ -172,5 +215,13 @@ namespace Klondike.Game
             return null;
         }
 
+        public void ResetGame()
+        {
+            Moves = 0;
+            score = 0;
+            movesList.Clear();
+            spots.Clear();
+            Time.timeScale = 1f;
+        }
     }
 }

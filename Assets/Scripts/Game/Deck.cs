@@ -19,7 +19,6 @@ namespace Klondike.Game
         [SerializeField] private Sprite[] deckSprites = default;
 
         [Header("For Debugging purposes Only")]
-        [SerializeField] private GameObject lastCardFetched; // serialized for debugging purposes only
         [SerializeField] private List<GameObject> availableCards = new List<GameObject>(); // only for showing in the inspector
         [SerializeField] private List<GameObject> discardedCards = new List<GameObject>(); // only for showing in the inspector
         #endregion
@@ -32,6 +31,7 @@ namespace Klondike.Game
         #region Properties
         public string SpotName { get { return gameObject.name; } }
         public RectTransform SpotPosition { get { return GetComponent<RectTransform>(); } }
+        public RectTransform SpawnPoint { get { return spawnPoint; } }
         public RectTransform WastePileSlot { get { return wastePile[Mathf.Clamp(currentWastePile.Count, 0, wastePile.Length - 1)]; } }
         public RectTransform WastePileUndoSlot { get { return wastePile[Mathf.Clamp(wastePile.Length - currentDeck.Count, 0, wastePile.Length - 1)]; } }
         public GameObject DeckTopCard { get { return currentDeck.Last.Value; } }
@@ -51,22 +51,20 @@ namespace Klondike.Game
             switch (moveToExecute.MoveType)
             {
                 case MoveType.FETCH_CARD:
+                {
                     FetchCard();
                     break;
+                }
                 case MoveType.RECYCLE_WASTE:
+                {
                     StartCoroutine(RecycleWaste());
                     break;
-                case MoveType.WASTE_TO_FOUNDATION:
-                    FetchCard();
-                    break;
-                case MoveType.WASTE_TO_TABLEAU:
-                    StartCoroutine(RecycleWaste());
-                    break;
-
-
+                }
                 default:
+                {
                     Debug.LogError("[Deck] the move to execute doesn't belong to this object");
                     break;
+                }
             }
         }
 
@@ -75,14 +73,20 @@ namespace Klondike.Game
             switch (moveToUndo.MoveType)
             {
                 case MoveType.FETCH_CARD:
+                {
                     UndoFetchCard(moveToUndo.Card);
                     break;
+                }
                 case MoveType.RECYCLE_WASTE:
+                {
                     StartCoroutine(UndoRecycleWaste());
                     break;
+                }
                 default:
-                    Debug.LogError("[Deck] the move to execute doesn't belong to this object");
+                {
+                    Debug.LogError("[Deck] the move to undo doesn't belong to this object");
                     break;
+                }
             }
         }
 
@@ -110,13 +114,12 @@ namespace Klondike.Game
             else
             {
                 //availableCardIndex = availableCardIndex - 1 < 0 ? availableCards.Count - 1 : availableCardIndex - 1;
-                lastCardFetched = DeckTopCard; // only for showing in the inspector
+                //lastCardFetched = DeckTopCard; // only for showing in the inspector
                 gameMove = new GameMove(this, this, DeckTopCard);
             }
             // If there are still available cards, show a covered card sprite
-            deckImage.sprite = availableCards.Count > 0 ? deckSprites[0] : deckSprites[1];
-
             GameManager.Singleton.HandleNewMove(gameMove);
+            deckImage.sprite = availableCards.Count > 0 ? deckSprites[0] : deckSprites[1];
         }
 
         /// <summary>
@@ -150,7 +153,8 @@ namespace Klondike.Game
             AddCardToStock(targetCard);
 
             // set the next card to undo
-            lastCardFetched = WasteBottomCard;
+            //lastCardFetched = WasteBottomCard;
+            deckImage.sprite = availableCards.Count > 0 ? deckSprites[0] : deckSprites[1];
         }
 
         private void FromDeckToWaste(GameObject cardToTurn)
@@ -214,6 +218,9 @@ namespace Klondike.Game
 
         private IEnumerator RecycleWaste()
         {
+            // first of all, deactivate the last fetched card
+            currentWastePile.Last.Value.GetComponent<Card>().ToggleInteractable();
+
             // cycle through all the current waste pile
             var node = currentWastePile.Last;
             while (currentWastePile.Count > 0)
@@ -242,6 +249,9 @@ namespace Klondike.Game
 
         private IEnumerator UndoRecycleWaste()
         {
+            // first of all, deactivate the last fetched card
+            currentDeck.First.Value.GetComponent<Card>().ToggleInteractable();
+
             // cycle through all the current available pile
             var node = currentDeck.Last;
             while (currentDeck.Count > 0)
@@ -266,6 +276,7 @@ namespace Klondike.Game
                     node = nextNode;
                 }
             }
+            deckImage.sprite = availableCards.Count > 0 ? deckSprites[0] : deckSprites[1];
             yield return null;
         }
 

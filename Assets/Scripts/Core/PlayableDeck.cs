@@ -33,6 +33,11 @@ namespace Klondike.Core
             }
         }
 
+        public void Reset()
+        {
+            currentIndex = 0;
+        }
+
         public PlayableCard GetNextCard()
         {
             return deckArray[currentIndex++];

@@ -1,5 +1,4 @@
 ﻿using System;
-using Klondike.Core;
 using TMPro;
 using UnityEngine;
 
@@ -13,27 +12,24 @@ namespace Klondike.Game
         #endregion
 
         #region Attributes
-        private bool gameStarted = false;
-        private float preparationTime = 0f, elapsedTime = 0f;
+        private bool timerStarted = false;
+        private float elapsedTime = 0f;
         #endregion
 
         #region Properties
-        public int ElapsedTime { get { return TimeSpan.FromSeconds(elapsedTime - preparationTime).Seconds; } } 
+        public int ElapsedTime { get { return (int)elapsedTime; } } 
         #endregion
 
         private void OnEnable()
         {
             GameManager.OnStartGame += ToggleGameStatus;
+            GameManager.OnStartGame += StartMalusCounter;
             GameManager.OnEndGame += ToggleGameStatus;
         }
 
         void Update()
         {
-            if (!gameStarted)
-            {
-                preparationTime += 1 * Time.deltaTime;
-            }
-            else
+            if (timerStarted)
             {
                 UpdateLevelTimer();
             }
@@ -44,22 +40,37 @@ namespace Klondike.Game
             elapsedTime += 1 * Time.deltaTime;
 
             TimeSpan time = TimeSpan.FromSeconds(elapsedTime);
-            //if (time.Seconds % 10 == 0 )
-            //{
-            //    GameManager.Singleton.AddPointsToScore(-2);
-            //}
             gameTimer.text = string.Format("{0:00}:{1:00}", time.Minutes, time.Seconds);
 
         }
 
-        private void ToggleGameStatus()
+        public void ToggleGameStatus()
         {
-            gameStarted = !gameStarted;
+            timerStarted = !timerStarted;
+            if(!timerStarted)
+            {
+                Time.timeScale = 0f;
+            }
+            else
+            {
+                Time.timeScale = 1f;
+            }
+        }
+
+        public void StartMalusCounter()
+        {
+            InvokeRepeating("ApplyMalus", 10f, 10f);
+        }
+
+        private void ApplyMalus()
+        {
+            GameManager.Singleton.AddPointsToScore(-2);
         }
 
         private void OnDisable()
         {
             GameManager.OnStartGame -= ToggleGameStatus;
+            GameManager.OnStartGame -= StartMalusCounter;
             GameManager.OnEndGame -= ToggleGameStatus;
         }
 

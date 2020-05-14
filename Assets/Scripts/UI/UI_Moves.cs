@@ -9,12 +9,6 @@ namespace Klondike.UI
         /*Reference to moves counter text */
         [SerializeField] private TextMeshProUGUI movesCounter = default;
 
-
-        private void OnEnable()
-        {
-            GameManager.OnValidMove += UpdateMovesCounter;
-        }
-
         public void UpdateMovesCounter()
         {
             if (!movesCounter)
@@ -23,11 +17,6 @@ namespace Klondike.UI
                 return;
             }
             movesCounter.text = GameManager.Singleton.Moves.ToString();
-        }
-
-        private void OnDestroy()
-        {
-            GameManager.OnValidMove -= UpdateMovesCounter;
         }
     }
 }

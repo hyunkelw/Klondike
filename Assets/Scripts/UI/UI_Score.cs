@@ -9,12 +9,6 @@ namespace Klondike.UI
         /*Reference to Score counter text */
         [SerializeField] private TextMeshProUGUI scoreCounter = default;
 
-
-        private void OnEnable()
-        {
-            GameManager.OnScoreUpdated += UpdateScoreCounter;
-        }
-
         public void UpdateScoreCounter()
         {
             if (!scoreCounter)
@@ -25,10 +19,5 @@ namespace Klondike.UI
             scoreCounter.text = GameManager.Singleton.Score.ToString();
         }
 
-        private void OnDestroy()
-        {
-            GameManager.OnScoreUpdated -= UpdateScoreCounter;
-
-        }
     }
 }

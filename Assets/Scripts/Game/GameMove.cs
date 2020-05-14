@@ -88,8 +88,6 @@ namespace Klondike.Game
                 }
                 case MoveType.FETCH_CARD:
                 case MoveType.RECYCLE_WASTE:
-                //case MoveType.WASTE_TO_TABLEAU:
-                //case MoveType.WASTE_TO_FOUNDATION:
                 {
                     from.Execute?.Invoke(this);
                     break;
@@ -116,8 +114,6 @@ namespace Klondike.Game
                 }
                 case MoveType.FETCH_CARD:
                 case MoveType.RECYCLE_WASTE:
-                //case MoveType.WASTE_TO_TABLEAU:
-                //case MoveType.WASTE_TO_FOUNDATION:
                 {
                     from.Undo?.Invoke(this);
                     break;
